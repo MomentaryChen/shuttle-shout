@@ -40,5 +40,3 @@ out/
 *.db
 *.mv.db
 *.trace.db
-data/
-!data/.gitkeep
