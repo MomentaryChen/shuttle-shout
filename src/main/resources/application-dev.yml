@@ -1,0 +1,41 @@
+spring:
+  devtools:
+    restart:
+      enabled: true
+      # 排除不需要重启的资源
+      exclude: static/**,public/**,templates/**,META-INF/maven/**,META-INF/resources/**
+      # 额外的监控路径
+      additional-paths: src/main/java
+    livereload:
+      enabled: true
+      port: 35729
+    # 禁用 LiveReload 的远程连接（安全考虑）
+    remote:
+      secret: devtools-secret-key-change-in-production
+
+# MyBatis-Flex开发环境配置
+mybatis-flex:
+  datasource:
+    datasource-1:
+      type: com.zaxxer.hikari.HikariDataSource
+      url: jdbc:mysql://localhost:3306/shuttleshout?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Taipei&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      username: root
+      password: root123456
+      hikari:
+        minimum-idle: 5
+        maximum-pool-size: 20
+        connection-timeout: 30000
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  charset:
+    console: UTF-8
+    file: UTF-8
+  level:
+    root: INFO
+    com.shuttleshout: DEBUG
+    com.shuttleshout.aspect: INFO
+    org.springframework.boot.devtools: DEBUG
+    org.springframework.aop: DEBUG

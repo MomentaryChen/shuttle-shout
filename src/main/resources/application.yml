@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: shuttle-shout-backend
+  
+  profiles:
+    active: dev
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/shuttleshout?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Taipei&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: Asia/Taipei
+  
+  devtools:
+    # DevTools 配置（开发环境启用）
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+
+server:
+  port: 18080
+  servlet:
+    context-path: /api
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+# MyBatis-Flex配置
+mybatis-flex:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.shuttleshout.common.model.po
+  mapper-package: com.shuttleshout.repository
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  charset:
+    console: UTF-8
+    file: UTF-8
+  level:
+    root: INFO
+    com.shuttleshout: DEBUG
+    com.shuttleshout.aspect: INFO
+    org.springframework.web: INFO
+    com.shuttleshout.mapper: DEBUG
+    org.springframework.aop: DEBUG
+
+# JWT配置
+jwt:
+  secret: shuttleshout-secret-key-change-in-production-environment-please-use-a-long-random-string
+  expiration: 86400000 # 24小时（毫秒）
