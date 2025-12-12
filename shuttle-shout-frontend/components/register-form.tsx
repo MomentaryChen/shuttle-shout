@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { userApi } from "@/lib/api"
+import { userApi, authApi } from "@/lib/api"
 import { useAuth } from "@/contexts/AuthContext"
 import { LoginResponse } from "@/types/api"
 import { Button } from "@/components/ui/button"
@@ -51,25 +51,41 @@ export function RegisterForm({ onSuccess, onCancel }: RegisterFormProps) {
     setIsLoading(true)
 
     try {
-      // 注册用户（注册API会自动登录并返回LoginResponse，包含token和user信息）
+      // 註冊用戶（註冊API返回UserDto，不包含token）
       const { confirmPassword, ...userData } = data
-      const response: LoginResponse = await userApi.register({
+      const registeredUser = await userApi.register({
         username: userData.username,
-        password: userData.password, // 使用解构后的password
+        password: userData.password,
         email: userData.email || undefined,
         phoneNumber: userData.phoneNumber || undefined,
         realName: userData.realName || undefined,
       })
 
-      // token已经通过userApi.register存储到localStorage
-      // 现在直接使用返回的response更新AuthContext状态（避免重复API调用）
-      if (response.token && response.user) {
-        await setLoginState({
-          token: response.token,
-          user: response.user,
-        })
-        toast.success("註冊成功！已自動登錄")
-        onSuccess?.()
+      // 註冊成功後，使用註冊時的用戶名和密碼自動登錄
+      if (registeredUser && registeredUser.id) {
+        try {
+          const loginResponse: LoginResponse = await authApi.login({
+            username: userData.username,
+            password: userData.password,
+          })
+
+          // 登錄成功後更新AuthContext狀態
+          if (loginResponse.token && loginResponse.user) {
+            await setLoginState({
+              token: loginResponse.token,
+              user: loginResponse.user,
+            })
+            toast.success("註冊成功！已自動登錄")
+            onSuccess?.()
+          } else {
+            throw new Error("登錄響應數據不完整")
+          }
+        } catch (loginErr: any) {
+          // 如果自動登錄失敗，只顯示註冊成功，提示用戶手動登錄
+          console.error("自動登錄失敗:", loginErr)
+          toast.success("註冊成功！請手動登錄")
+          onSuccess?.()
+        }
       } else {
         throw new Error("註冊響應數據不完整")
       }

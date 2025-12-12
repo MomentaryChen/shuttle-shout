@@ -47,7 +47,7 @@ public class UserTeamController {
             List<UserTeamDTO> userTeams = userTeamService.getAllUserTeams();
             return ResponseEntity.ok(userTeams);
         } catch (Exception e) {
-            throw new ApiException("获取用户团队关系列表失败: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, "GET_USER_TEAMS_ERROR", e);
+            throw new ApiException("獲取用戶團隊關係列表失敗: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, "GET_USER_TEAMS_ERROR", e);
         }
     }
 
@@ -61,7 +61,7 @@ public class UserTeamController {
             List<UserTeamDTO> members = userTeamService.getTeamMembers(teamId);
             return ResponseEntity.ok(members);
         } catch (Exception e) {
-            throw new ApiException("获取团队成员失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "GET_TEAM_MEMBERS_ERROR", e);
+            throw new ApiException("獲取團隊成員失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "GET_TEAM_MEMBERS_ERROR", e);
         }
     }
 
@@ -75,7 +75,7 @@ public class UserTeamController {
             List<UserTeamDTO> userTeams = userTeamService.getUserTeams(userId);
             return ResponseEntity.ok(userTeams);
         } catch (Exception e) {
-            throw new ApiException("获取用户团队失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "GET_USER_TEAMS_ERROR", e);
+            throw new ApiException("獲取用戶團隊失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "GET_USER_TEAMS_ERROR", e);
         }
     }
 
@@ -89,7 +89,7 @@ public class UserTeamController {
             UserTeamDTO userTeam = userTeamService.joinTeam(userTeamCreateDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(userTeam);
         } catch (Exception e) {
-            throw new ApiException("加入团队失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "JOIN_TEAM_ERROR", e);
+            throw new ApiException("加入團隊失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "JOIN_TEAM_ERROR", e);
         }
     }
 
@@ -103,7 +103,7 @@ public class UserTeamController {
             userTeamService.leaveTeam(userId, teamId);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            throw new ApiException("离开团队失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "LEAVE_TEAM_ERROR", e);
+            throw new ApiException("離開團隊失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "LEAVE_TEAM_ERROR", e);
         }
     }
 
@@ -122,7 +122,7 @@ public class UserTeamController {
             UserTeamDTO userTeam = userTeamService.joinTeam(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(userTeam);
         } catch (Exception e) {
-            throw new ApiException("加入团队失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "JOIN_TEAM_ERROR", e);
+            throw new ApiException("加入團隊失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "JOIN_TEAM_ERROR", e);
         }
     }
 
@@ -136,7 +136,7 @@ public class UserTeamController {
             userTeamService.leaveTeam(currentUserId, teamId);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            throw new ApiException("离开团队失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "LEAVE_TEAM_ERROR", e);
+            throw new ApiException("離開團隊失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "LEAVE_TEAM_ERROR", e);
         }
     }
 
@@ -150,7 +150,7 @@ public class UserTeamController {
             userTeamService.removeMember(currentUserId, targetUserId, teamId);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            throw new ApiException("移除成员失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "REMOVE_MEMBER_ERROR", e);
+            throw new ApiException("移除成員失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "REMOVE_MEMBER_ERROR", e);
         }
     }
 }

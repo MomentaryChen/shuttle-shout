@@ -53,7 +53,7 @@ public class JwtUtil {
         try {
             return Long.parseLong(subject);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("无法从token中解析用户ID: " + subject);
+            throw new IllegalArgumentException("無法從token中解析用戶ID: " + subject);
         }
     }
 

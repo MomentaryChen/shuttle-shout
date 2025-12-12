@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ErrorResponse> handleApiException(ApiException ex, HttpServletRequest request) {
-        log.error("API异常: {}", ex.getMessage(), ex);
+        log.error("API異常: {}", ex.getMessage(), ex);
         
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .errorCode(ex.getErrorCode())
@@ -52,9 +52,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
-        log.error("参数验证失败: {}", ex.getMessage(), ex);
+        log.error("參數驗證失敗: {}", ex.getMessage(), ex);
         
-        StringBuilder errorMessage = new StringBuilder("参数验证失败: ");
+        StringBuilder errorMessage = new StringBuilder("參數驗證失敗: ");
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             errorMessage.append(error.getField())
                     .append(" - ")
@@ -78,9 +78,9 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ErrorResponse> handleBindException(BindException ex, HttpServletRequest request) {
-        log.error("绑定异常: {}", ex.getMessage(), ex);
+        log.error("綁定異常: {}", ex.getMessage(), ex);
         
-        StringBuilder errorMessage = new StringBuilder("参数绑定失败: ");
+        StringBuilder errorMessage = new StringBuilder("參數綁定失敗: ");
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             errorMessage.append(error.getField())
                     .append(" - ")
@@ -105,11 +105,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolationException(
             ConstraintViolationException ex, HttpServletRequest request) {
-        log.error("约束违反异常: {}", ex.getMessage(), ex);
+        log.error("約束違反異常: {}", ex.getMessage(), ex);
         
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .errorCode("CONSTRAINT_VIOLATION")
-                .message("参数约束违反: " + ex.getMessage())
+                .message("參數約束違反: " + ex.getMessage())
                 .status(HttpStatus.BAD_REQUEST.value())
                 .timestamp(LocalDateTime.now())
                 .path(request.getRequestURI())
@@ -124,11 +124,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({AuthenticationException.class, BadCredentialsException.class})
     public ResponseEntity<ErrorResponse> handleAuthenticationException(
             Exception ex, HttpServletRequest request) {
-        log.error("认证异常: {}", ex.getMessage(), ex);
+        log.error("認證異常: {}", ex.getMessage(), ex);
         
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .errorCode("AUTHENTICATION_ERROR")
-                .message("认证失败: " + ex.getMessage())
+                .message("認證失敗: " + ex.getMessage())
                 .status(HttpStatus.UNAUTHORIZED.value())
                 .timestamp(LocalDateTime.now())
                 .path(request.getRequestURI())
@@ -143,11 +143,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(
             AccessDeniedException ex, HttpServletRequest request) {
-        log.error("权限不足: {}", ex.getMessage(), ex);
+        log.error("權限不足: {}", ex.getMessage(), ex);
         
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .errorCode("ACCESS_DENIED")
-                .message("权限不足: " + ex.getMessage())
+                .message("權限不足: " + ex.getMessage())
                 .status(HttpStatus.FORBIDDEN.value())
                 .timestamp(LocalDateTime.now())
                 .path(request.getRequestURI())
@@ -162,7 +162,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalStateException(
             IllegalStateException ex, HttpServletRequest request) {
-        log.error("非法状态异常: {}", ex.getMessage(), ex);
+        log.error("非法狀態異常: {}", ex.getMessage(), ex);
         
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .errorCode("ILLEGAL_STATE")
@@ -181,7 +181,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
             IllegalArgumentException ex, HttpServletRequest request) {
-        log.error("非法参数异常: {}", ex.getMessage(), ex);
+        log.error("非法參數異常: {}", ex.getMessage(), ex);
         
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .errorCode("ILLEGAL_ARGUMENT")
@@ -200,7 +200,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(
             RuntimeException ex, HttpServletRequest request) {
-        log.error("运行时异常: {}", ex.getMessage(), ex);
+        log.error("運行時異常: {}", ex.getMessage(), ex);
         
         // 将RuntimeException包装成ApiException
         ApiException apiException = new ApiException(
@@ -218,11 +218,11 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex, HttpServletRequest request) {
-        log.error("未处理的异常: {}", ex.getMessage(), ex);
+        log.error("未處理的異常: {}", ex.getMessage(), ex);
         
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .errorCode("INTERNAL_ERROR")
-                .message("服务器内部错误: " + ex.getMessage())
+                .message("伺服器內部錯誤: " + ex.getMessage())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .timestamp(LocalDateTime.now())
                 .path(request.getRequestURI())

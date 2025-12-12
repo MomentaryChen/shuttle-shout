@@ -50,11 +50,11 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
         if (user == null) {
-            throw new UsernameNotFoundException("用户不存在: " + userId);
+            throw new UsernameNotFoundException("用戶不存在: " + userId);
         }
 
         if (user.getIsActive() == null || !user.getIsActive()) {
-            throw new UsernameNotFoundException("用户已被禁用: " + userId);
+            throw new UsernameNotFoundException("用戶已被禁用: " + userId);
         }
 
         // 获取用户角色权限

@@ -46,7 +46,7 @@ public class RoleResourcePageController {
             List<RoleResourcePageDTO> associations = roleResourcePageService.getAllRoleResourcePages();
             return ResponseEntity.ok(associations);
         } catch (Exception e) {
-            throw new ApiException("获取角色页面关联列表失败: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, "GET_ROLE_RESOURCE_PAGES_ERROR", e);
+            throw new ApiException("獲取角色頁面關聯列表失敗: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, "GET_ROLE_RESOURCE_PAGES_ERROR", e);
         }
     }
 
@@ -61,7 +61,7 @@ public class RoleResourcePageController {
             List<RoleResourcePageDTO> associations = roleResourcePageService.getRoleResourcePagesByRoleId(roleId);
             return ResponseEntity.ok(associations);
         } catch (Exception e) {
-            throw new ApiException("获取角色页面权限失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "GET_ROLE_RESOURCE_PAGES_ERROR", e);
+            throw new ApiException("獲取角色頁面權限失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "GET_ROLE_RESOURCE_PAGES_ERROR", e);
         }
     }
 
@@ -76,7 +76,7 @@ public class RoleResourcePageController {
             List<RoleResourcePageDTO> associations = roleResourcePageService.getRoleResourcePagesByResourcePageId(resourcePageId);
             return ResponseEntity.ok(associations);
         } catch (Exception e) {
-            throw new ApiException("获取页面资源的角色权限失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "GET_RESOURCE_PAGE_ROLES_ERROR", e);
+            throw new ApiException("獲取頁面資源的角色權限失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "GET_RESOURCE_PAGE_ROLES_ERROR", e);
         }
     }
 
@@ -96,7 +96,7 @@ public class RoleResourcePageController {
             roleResourcePageService.assignResourcePageToRole(roleId, resourcePageId, canRead, canWrite, canDelete);
             return ResponseEntity.status(HttpStatus.CREATED).build();
         } catch (Exception e) {
-            throw new ApiException("分配页面权限失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "ASSIGN_RESOURCE_PAGE_ERROR", e);
+            throw new ApiException("分配頁面權限失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "ASSIGN_RESOURCE_PAGE_ERROR", e);
         }
     }
 
@@ -113,7 +113,7 @@ public class RoleResourcePageController {
             roleResourcePageService.removeResourcePageFromRole(roleId, resourcePageId);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            throw new ApiException("移除页面权限失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "REMOVE_RESOURCE_PAGE_ERROR", e);
+            throw new ApiException("移除頁面權限失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "REMOVE_RESOURCE_PAGE_ERROR", e);
         }
     }
 
@@ -133,7 +133,7 @@ public class RoleResourcePageController {
             roleResourcePageService.updateRoleResourcePagePermission(roleId, resourcePageId, canRead, canWrite, canDelete);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
-            throw new ApiException("更新页面权限失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "UPDATE_RESOURCE_PAGE_PERMISSION_ERROR", e);
+            throw new ApiException("更新頁面權限失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "UPDATE_RESOURCE_PAGE_PERMISSION_ERROR", e);
         }
     }
 }

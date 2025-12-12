@@ -15,10 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
-import org.springframework.http.HttpStatus;
 
 import com.shuttleshout.common.constants.ApplicationConstants;
 import com.shuttleshout.common.exception.ApiException;
+import com.shuttleshout.common.exception.ErrorCode;
 import com.shuttleshout.common.model.dto.TeamCreateDTO;
 import com.shuttleshout.common.model.dto.TeamDTO;
 import com.shuttleshout.common.model.dto.TeamUpdateDTO;
@@ -81,7 +81,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamRepository, TeamPO> impleme
     public TeamDTO getTeamById(Long id) {
         TeamPO team = getMapper().selectOneById(id);
         if (team == null) {
-            throw new ApiException("球隊不存在，ID: " + id, HttpStatus.NOT_FOUND, "TEAM_NOT_FOUND");
+            throw new ApiException(ErrorCode.TEAM_NOT_FOUND, "球隊不存在，ID: " + id);
         }
         // convertToDto已經包含playerIds和currentPlayerCount
         return convertToDto(team);
@@ -96,7 +96,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamRepository, TeamPO> impleme
                 .where(TEAM_PO.NAME.eq(name));
         TeamPO team = getMapper().selectOneByQuery(queryWrapper);
         if (team == null) {
-            throw new ApiException("球隊不存在，名稱: " + name, HttpStatus.NOT_FOUND, "TEAM_NOT_FOUND");
+            throw new ApiException(ErrorCode.TEAM_NOT_FOUND, "球隊不存在，名稱: " + name);
         }
         return convertToDto(team);
     }
@@ -110,7 +110,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamRepository, TeamPO> impleme
         // 檢查用戶是否存在
         UserPO user = userRepository.selectOneById(teamCreateDto.getUserId());
         if (user == null) {
-            throw new ApiException("用戶不存在，ID: " + teamCreateDto.getUserId(), HttpStatus.NOT_FOUND, "USER_NOT_FOUND");
+            throw new ApiException(ErrorCode.USER_NOT_FOUND, "用戶不存在，ID: " + teamCreateDto.getUserId());
         }
 
         // 檢查球隊名稱是否已存在
@@ -156,14 +156,14 @@ public class TeamServiceImpl extends ServiceImpl<TeamRepository, TeamPO> impleme
     public TeamDTO updateTeam(Long id, @Valid TeamUpdateDTO teamUpdateDto) {
         TeamPO team = getMapper().selectOneById(id);
         if (team == null) {
-            throw new ApiException("球隊不存在，ID: " + id, HttpStatus.NOT_FOUND, "TEAM_NOT_FOUND");
+            throw new ApiException(ErrorCode.TEAM_NOT_FOUND, "球隊不存在，ID: " + id);
         }
 
         // 檢查用戶是否存在（如果提供了 userId）
         if (teamUpdateDto.getUserId() != null) {
             UserPO user = userRepository.selectOneById(teamUpdateDto.getUserId());
             if (user == null) {
-                throw new RuntimeException("用戶不存在，ID: " + teamUpdateDto.getUserId());
+                throw new ApiException(ErrorCode.USER_NOT_FOUND, "用戶不存在，ID: " + teamUpdateDto.getUserId());
             }
         }
 
@@ -211,7 +211,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamRepository, TeamPO> impleme
     public void deleteTeam(Long id) {
         TeamPO team = getMapper().selectOneById(id);
         if (team == null) {
-            throw new ApiException("球隊不存在，ID: " + id, HttpStatus.NOT_FOUND, "TEAM_NOT_FOUND");
+            throw new ApiException(ErrorCode.TEAM_NOT_FOUND, "球隊不存在，ID: " + id);
         }
 
         // 注意：由於外鍵約束設置為 ON DELETE SET NULL，刪除球隊時，關聯的球員和場地的 team_id 會被設置為 NULL
@@ -235,7 +235,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamRepository, TeamPO> impleme
         }
         TeamPO existingTeam = getMapper().selectOneByQuery(queryWrapper);
         if (existingTeam != null) {
-            throw new ApiException("球隊名稱已存在: " + teamName, HttpStatus.BAD_REQUEST, "TEAM_NAME_ALREADY_EXISTS");
+            throw new ApiException(ErrorCode.TEAM_NAME_ALREADY_EXISTS, "球隊名稱已存在: " + teamName);
         }
     }
 

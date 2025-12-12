@@ -14,9 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
-import org.springframework.http.HttpStatus;
 
 import com.shuttleshout.common.exception.ApiException;
+import com.shuttleshout.common.exception.ErrorCode;
 import com.shuttleshout.common.model.dto.UserCreateDTO;
 import com.shuttleshout.common.model.dto.UserDTO;
 import com.shuttleshout.common.model.dto.UserUpdateDTO;
@@ -65,7 +65,7 @@ public class UserServiceImpl extends ServiceImpl<UserRepository, UserPO> impleme
     public UserDTO getUserById(Long id) {
         UserPO user = getMapper().selectOneById(id);
         if (user == null) {
-            throw new ApiException("用户不存在，ID: " + id, HttpStatus.NOT_FOUND, "USER_NOT_FOUND");
+            throw new ApiException(ErrorCode.USER_NOT_FOUND, "用戶不存在，ID: " + id);
         }
         return convertToDto(user);
     }
@@ -79,7 +79,7 @@ public class UserServiceImpl extends ServiceImpl<UserRepository, UserPO> impleme
                 .where(USER_PO.USERNAME.eq(username));
         UserPO user = getMapper().selectOneByQuery(queryWrapper);
         if (user == null) {
-            throw new ApiException("用户不存在，用户名: " + username, HttpStatus.NOT_FOUND, "USER_NOT_FOUND");
+            throw new ApiException(ErrorCode.USER_NOT_FOUND, "用戶不存在，用戶名: " + username);
         }
         return convertToDto(user);
     }
@@ -94,7 +94,7 @@ public class UserServiceImpl extends ServiceImpl<UserRepository, UserPO> impleme
                 .where(USER_PO.USERNAME.eq(userCreateDto.getUsername()));
         UserPO existingUser = getMapper().selectOneByQuery(queryWrapper);
         if (existingUser != null) {
-            throw new ApiException("用户名已存在: " + userCreateDto.getUsername(), HttpStatus.BAD_REQUEST, "USERNAME_ALREADY_EXISTS");
+            throw new ApiException(ErrorCode.USERNAME_ALREADY_EXISTS, "用戶名已存在: " + userCreateDto.getUsername());
         }
 
         // 检查邮箱是否已存在
@@ -103,7 +103,7 @@ public class UserServiceImpl extends ServiceImpl<UserRepository, UserPO> impleme
                     .where(USER_PO.EMAIL.eq(userCreateDto.getEmail()));
             existingUser = getMapper().selectOneByQuery(queryWrapper);
             if (existingUser != null) {
-                throw new ApiException("邮箱已存在: " + userCreateDto.getEmail(), HttpStatus.BAD_REQUEST, "EMAIL_ALREADY_EXISTS");
+                throw new ApiException(ErrorCode.EMAIL_ALREADY_EXISTS, "郵箱已存在: " + userCreateDto.getEmail());
             }
         }
 
@@ -135,7 +135,7 @@ public class UserServiceImpl extends ServiceImpl<UserRepository, UserPO> impleme
     public UserDTO updateUser(Long id, @Valid UserUpdateDTO userUpdateDto) {
         UserPO user = getMapper().selectOneById(id);
         if (user == null) {
-            throw new ApiException("用户不存在，ID: " + id, HttpStatus.NOT_FOUND, "USER_NOT_FOUND");
+            throw new ApiException(ErrorCode.USER_NOT_FOUND, "用戶不存在，ID: " + id);
         }
 
         // 检查邮箱是否已被其他用户使用
@@ -145,7 +145,7 @@ public class UserServiceImpl extends ServiceImpl<UserRepository, UserPO> impleme
                     .and(USER_PO.ID.ne(id));
             UserPO existingUser = getMapper().selectOneByQuery(queryWrapper);
             if (existingUser != null) {
-                throw new ApiException("邮箱已被使用: " + userUpdateDto.getEmail(), HttpStatus.BAD_REQUEST, "EMAIL_ALREADY_EXISTS");
+                throw new ApiException(ErrorCode.EMAIL_ALREADY_EXISTS, "郵箱已被使用: " + userUpdateDto.getEmail());
             }
         }
 
@@ -187,7 +187,7 @@ public class UserServiceImpl extends ServiceImpl<UserRepository, UserPO> impleme
     public void deleteUser(Long id) {
         UserPO user = getMapper().selectOneById(id);
         if (user == null) {
-            throw new ApiException("用户不存在，ID: " + id, HttpStatus.NOT_FOUND, "USER_NOT_FOUND");
+            throw new ApiException(ErrorCode.USER_NOT_FOUND, "用戶不存在，ID: " + id);
         }
 
         // 删除用户角色关联
@@ -218,7 +218,7 @@ public class UserServiceImpl extends ServiceImpl<UserRepository, UserPO> impleme
         for (Long roleId : roleIds) {
             RolePO role = roleRepository.selectOneById(roleId);
             if (role == null) {
-                throw new ApiException("角色不存在，ID: " + roleId, HttpStatus.NOT_FOUND, "ROLE_NOT_FOUND");
+                throw new ApiException(ErrorCode.ROLE_NOT_FOUND, "角色不存在，ID: " + roleId);
             }
 
             UserRolePO userRole = new UserRolePO();

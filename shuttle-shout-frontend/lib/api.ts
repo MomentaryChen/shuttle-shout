@@ -1,16 +1,16 @@
 /**
- * API服务 - 与后端API通信
+ * API服務 - 與後端API通信
  */
 
-import { PlayerDto, CourtDto, QueueDto, QueueStatus, TeamDto, LoginRequest, LoginResponse, UserDto, ResourcePageDto } from "@/types/api"
+import { PlayerDto, CourtDto, QueueDto, QueueStatus, TeamDto, LoginRequest, LoginResponse, UserDto, ResourcePageDto, UserTeamDto } from "@/types/api"
 
-// 获取存储的token（已经在上面定义）
-// getStoredToken, setStoredToken, clearStoredToken 函数已经在上面定义
+// 獲取存儲的token（已經在上面定義）
+// getStoredToken, setStoredToken, clearStoredToken 函數已經在上面定義
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:18080/api"
 
 /**
- * 获取存储的token
+ * 獲取存儲的token
  */
 export function getStoredToken(): string | null {
   if (typeof window === "undefined") return null
@@ -18,7 +18,7 @@ export function getStoredToken(): string | null {
 }
 
 /**
- * 存储token
+ * 存儲token
  */
 export function setStoredToken(token: string): void {
   if (typeof window === "undefined") return
@@ -34,7 +34,7 @@ export function clearStoredToken(): void {
 }
 
 /**
- * 通用API请求函数
+ * 通用API請求函數
  */
 async function apiRequest<T>(
   endpoint: string,
@@ -49,7 +49,7 @@ async function apiRequest<T>(
     ...options?.headers,
   }
 
-  // 如果需要认证且有token，添加到请求头
+  // 如果需要認證且有token，添加到請求頭
   if (includeAuth && token) {
     headers["X-AUTHORIZATION"] = token
   }
@@ -61,9 +61,9 @@ async function apiRequest<T>(
 
   if (!response.ok) {
     const errorText = await response.text()
-    let errorMessage = `API请求失败: ${response.status} ${response.statusText}`
+    let errorMessage = `API請求失敗: ${response.status} ${response.statusText}`
     
-    // 尝试解析错误响应JSON，提取message字段
+    // 嘗試解析錯誤響應JSON，提取message字段
     try {
       if (errorText) {
         const errorJson = JSON.parse(errorText)
@@ -72,7 +72,7 @@ async function apiRequest<T>(
         }
       }
     } catch (parseError) {
-      // 如果解析失败，使用原始错误文本
+      // 如果解析失敗，使用原始錯誤文本
       if (errorText) {
         errorMessage = errorText
       }
@@ -81,32 +81,32 @@ async function apiRequest<T>(
     throw new Error(errorMessage)
   }
 
-  // 处理204 No Content响应
+  // 處理204 No Content響應
   if (response.status === 204) {
     return null as T
   }
 
-  // 检查响应体是否为空
-  // 注意：response.text() 只能调用一次，所以先读取文本
+  // 檢查響應體是否為空
+  // 注意：response.text() 只能調用一次，所以先讀取文本
   const text = await response.text()
   
-  // 如果响应体为空，返回null
+  // 如果響應體為空，返回null
   if (!text || text.trim() === "") {
     return null as T
   }
 
-  // 尝试解析JSON
+  // 嘗試解析JSON
   try {
     return JSON.parse(text) as T
   } catch (error) {
-    // 如果解析失败（例如logout返回空响应），返回null而不是抛出错误
-    console.warn("JSON解析失败，响应体为空或格式错误:", text.substring(0, 100))
+    // 如果解析失敗（例如logout返回空響應），返回null而不是拋出錯誤
+    console.warn("JSON解析失敗，響應體為空或格式錯誤:", text.substring(0, 100))
     return null as T
   }
 }
 
 /**
- * 无认证API请求函数（用于login等不需要token的请求）
+ * 無認證API請求函數（用於login等不需要token的請求）
  */
 async function apiRequestWithoutAuth<T>(
   endpoint: string,
@@ -116,25 +116,25 @@ async function apiRequestWithoutAuth<T>(
 }
 
 /**
- * 球员API
+ * 球員API
  */
 export const playerApi = {
   /**
-   * 获取所有球员
+   * 獲取所有球員
    */
   getAll: async (): Promise<PlayerDto[]> => {
     return apiRequest<PlayerDto[]>("/players")
   },
 
   /**
-   * 根据ID获取球员
+   * 根據ID獲取球員
    */
   getById: async (id: number): Promise<PlayerDto> => {
     return apiRequest<PlayerDto>(`/players/${id}`)
   },
 
   /**
-   * 创建球员
+   * 創建球員
    */
   create: async (player: Partial<PlayerDto>): Promise<PlayerDto> => {
     return apiRequest<PlayerDto>("/players", {
@@ -144,7 +144,7 @@ export const playerApi = {
   },
 
   /**
-   * 更新球员
+   * 更新球員
    */
   update: async (id: number, player: Partial<PlayerDto>): Promise<PlayerDto> => {
     return apiRequest<PlayerDto>(`/players/${id}`, {
@@ -154,7 +154,7 @@ export const playerApi = {
   },
 
   /**
-   * 删除球员
+   * 刪除球員
    */
   delete: async (id: number): Promise<void> => {
     return apiRequest<void>(`/players/${id}`, {
@@ -163,7 +163,7 @@ export const playerApi = {
   },
 
   /**
-   * 搜索球员
+   * 搜尋球員
    */
   search: async (keyword: string): Promise<PlayerDto[]> => {
     return apiRequest<PlayerDto[]>(`/players/search?keyword=${encodeURIComponent(keyword)}`)
@@ -171,32 +171,32 @@ export const playerApi = {
 }
 
 /**
- * 球场API
+ * 球場API
  */
 export const courtApi = {
   /**
-   * 获取所有球场
+   * 獲取所有球場
    */
   getAll: async (): Promise<CourtDto[]> => {
     return apiRequest<CourtDto[]>("/courts")
   },
 
   /**
-   * 获取所有活跃的球场
+   * 獲取所有活躍的球場
    */
   getActive: async (): Promise<CourtDto[]> => {
     return apiRequest<CourtDto[]>("/courts/active")
   },
 
   /**
-   * 根据ID获取球场
+   * 根據ID獲取球場
    */
   getById: async (id: number): Promise<CourtDto> => {
     return apiRequest<CourtDto>(`/courts/${id}`)
   },
 
   /**
-   * 创建球场
+   * 創建球場
    */
   create: async (court: Partial<CourtDto>): Promise<CourtDto> => {
     return apiRequest<CourtDto>("/courts", {
@@ -206,7 +206,7 @@ export const courtApi = {
   },
 
   /**
-   * 更新球场
+   * 更新球場
    */
   update: async (id: number, court: Partial<CourtDto>): Promise<CourtDto> => {
     return apiRequest<CourtDto>(`/courts/${id}`, {
@@ -216,7 +216,7 @@ export const courtApi = {
   },
 
   /**
-   * 删除球场
+   * 刪除球場
    */
   delete: async (id: number): Promise<void> => {
     return apiRequest<void>(`/courts/${id}`, {
@@ -226,39 +226,39 @@ export const courtApi = {
 }
 
 /**
- * 球队API
+ * 球隊API
  */
 export const teamApi = {
   /**
-   * 获取所有球队（不需要认证）
+   * 獲取所有球隊（不需要認證）
    */
   getAll: async (): Promise<TeamDto[]> => {
     return apiRequestWithoutAuth<TeamDto[]>("/teams")
   },
 
   /**
-   * 获取当前登录用户创建的球队（需要认证）
+   * 獲取當前登錄用戶創建的球隊（需要認證）
    */
   getMyTeams: async (): Promise<TeamDto[]> => {
     return apiRequest<TeamDto[]>("/teams/my")
   },
 
   /**
-   * 获取所有活跃的球队
+   * 獲取所有活躍的球隊
    */
   getActive: async (): Promise<TeamDto[]> => {
     return apiRequest<TeamDto[]>("/teams/active")
   },
 
   /**
-   * 根据ID获取球队
+   * 根據ID獲取球隊
    */
   getById: async (id: number): Promise<TeamDto> => {
     return apiRequest<TeamDto>(`/teams/${id}`)
   },
 
   /**
-   * 创建球队
+   * 創建球隊
    */
   create: async (team: Partial<TeamDto>): Promise<TeamDto> => {
     return apiRequest<TeamDto>("/teams", {
@@ -268,7 +268,7 @@ export const teamApi = {
   },
 
   /**
-   * 更新球队
+   * 更新球隊
    */
   update: async (id: number, team: Partial<TeamDto>): Promise<TeamDto> => {
     return apiRequest<TeamDto>(`/teams/${id}`, {
@@ -278,7 +278,7 @@ export const teamApi = {
   },
 
   /**
-   * 删除球队
+   * 刪除球隊
    */
   delete: async (id: number): Promise<void> => {
     return apiRequest<void>(`/teams/${id}`, {
@@ -288,32 +288,32 @@ export const teamApi = {
 }
 
 /**
- * 队列API
+ * 隊列API
  */
 export const queueApi = {
   /**
-   * 获取所有队列
+   * 獲取所有隊列
    */
   getAll: async (): Promise<QueueDto[]> => {
     return apiRequest<QueueDto[]>("/queues")
   },
 
   /**
-   * 获取等待中的队列
+   * 獲取等待中的隊列
    */
   getWaiting: async (): Promise<QueueDto[]> => {
     return apiRequest<QueueDto[]>("/queues/waiting")
   },
 
   /**
-   * 根据球场获取等待中的队列
+   * 根據球場獲取等待中的隊列
    */
   getWaitingByCourt: async (courtId: number): Promise<QueueDto[]> => {
     return apiRequest<QueueDto[]>(`/queues/waiting/court/${courtId}`)
   },
 
   /**
-   * 加入队列
+   * 加入隊列
    */
   join: async (playerId: number, courtId?: number): Promise<QueueDto> => {
     const params = new URLSearchParams({ playerId: playerId.toString() })
@@ -326,7 +326,7 @@ export const queueApi = {
   },
 
   /**
-   * 叫号
+   * 叫號
    */
   call: async (queueId: number, courtId?: number): Promise<QueueDto> => {
     const params = courtId ? `?courtId=${courtId}` : ""
@@ -336,7 +336,7 @@ export const queueApi = {
   },
 
   /**
-   * 完成服务
+   * 完成服務
    */
   serve: async (queueId: number): Promise<QueueDto> => {
     return apiRequest<QueueDto>(`/queues/${queueId}/serve`, {
@@ -345,7 +345,7 @@ export const queueApi = {
   },
 
   /**
-   * 取消队列
+   * 取消隊列
    */
   cancel: async (queueId: number): Promise<QueueDto> => {
     return apiRequest<QueueDto>(`/queues/${queueId}/cancel`, {
@@ -355,12 +355,12 @@ export const queueApi = {
 }
 
 /**
- * 认证API
- * 注意：后端配置了 context-path: /api，所以所有路径都会自动加上 /api 前缀
+ * 認證API
+ * 注意：後端配置了 context-path: /api，所以所有路徑都會自動加上 /api 前綴
  */
 export const authApi = {
   /**
-   * 用户登录
+   * 用戶登錄
    */
   login: async (loginRequest: LoginRequest): Promise<LoginResponse> => {
     const response = await apiRequestWithoutAuth<LoginResponse>("/auth/login", {
@@ -368,7 +368,7 @@ export const authApi = {
       body: JSON.stringify(loginRequest),
     })
 
-    // 登录成功后存储token
+    // 登錄成功後存儲token
     if (response.token) {
       setStoredToken(response.token)
     }
@@ -377,7 +377,7 @@ export const authApi = {
   },
 
   /**
-   * 用户登出
+   * 用戶登出
    */
   logout: async (): Promise<void> => {
     const token = getStoredToken()
@@ -388,14 +388,14 @@ export const authApi = {
           body: JSON.stringify(token),
         })
       } catch (error) {
-        console.error("登出失败:", error)
+        console.error("登出失敗:", error)
       }
     }
     clearStoredToken()
   },
 
   /**
-   * 获取当前用户信息
+   * 獲取當前用戶信息
    */
   getCurrentUser: async (): Promise<UserDto> => {
     return apiRequest<UserDto>("/users/me")
@@ -403,26 +403,26 @@ export const authApi = {
 }
 
 /**
- * 用户API
+ * 用戶API
  */
 export const userApi = {
   /**
-   * 获取所有用户
+   * 獲取所有用戶
    */
   getAll: async (): Promise<UserDto[]> => {
     return apiRequest<UserDto[]>("/users")
   },
 
   /**
-   * 根据ID获取用户
+   * 根據ID獲取用戶
    */
   getById: async (id: number): Promise<UserDto> => {
     return apiRequest<UserDto>(`/users/${id}`)
   },
 
   /**
-   * 用户注册（不需要认证）
-   * 注册成功后自动登录，返回登录响应（包含token和用户信息）
+   * 用戶註冊（不需要認證）
+   * 註冊成功後返回用戶信息（不包含token，需要單獨登錄）
    */
   register: async (userData: {
     username: string
@@ -430,22 +430,17 @@ export const userApi = {
     email?: string
     phoneNumber?: string
     realName?: string
-  }): Promise<LoginResponse> => {
-    const response = await apiRequestWithoutAuth<LoginResponse>("/auth/register", {
+  }): Promise<UserDto> => {
+    const response = await apiRequestWithoutAuth<UserDto>("/auth/register", {
       method: "POST",
       body: JSON.stringify(userData),
     })
-
-    // 注册成功后存储token（与登录API保持一致）
-    if (response.token) {
-      setStoredToken(response.token)
-    }
 
     return response
   },
 
   /**
-   * 更新当前用户信息
+   * 更新當前用戶信息
    */
   updateMe: async (userData: {
     email?: string
@@ -461,7 +456,7 @@ export const userApi = {
   },
 
   /**
-   * 更新指定用户信息
+   * 更新指定用戶信息
    */
   update: async (id: number, userData: {
     email?: string
@@ -479,12 +474,12 @@ export const userApi = {
 }
 
 /**
- * 管理员API
+ * 管理員API
  */
 export const adminApi = {
   /**
-   * 获取所有用户（管理员权限）
-   * 仅限SYSTEM_ADMIN角色访问的人员配置页面
+   * 獲取所有用戶（管理員權限）
+   * 僅限SYSTEM_ADMIN角色訪問的人員配置頁面
    */
   getAllUsers: async (): Promise<UserDto[]> => {
     return apiRequest<UserDto[]>("/users/admin/users")
@@ -492,32 +487,32 @@ export const adminApi = {
 }
 
 /**
- * 用户团队关系API
+ * 用戶團隊關係API
  */
 export const userTeamApi = {
   /**
-   * 获取所有用户团队关系
+   * 獲取所有用戶團隊關係
    */
-  getAll: async (): Promise<any[]> => {
-    return apiRequest<any[]>("/user-teams")
+  getAll: async (): Promise<UserTeamDto[]> => {
+    return apiRequest<UserTeamDto[]>("/user-teams")
   },
 
   /**
-   * 根据团队ID获取团队成员
+   * 根據團隊ID獲取團隊成員
    */
-  getTeamMembers: async (teamId: number): Promise<any[]> => {
-    return apiRequest<any[]>(`/user-teams/team/${teamId}`)
+  getTeamMembers: async (teamId: number): Promise<UserTeamDto[]> => {
+    return apiRequest<UserTeamDto[]>(`/user-teams/team/${teamId}`)
   },
 
   /**
-   * 根据用户ID获取用户加入的团队
+   * 根據用戶ID獲取用戶加入的團隊
    */
-  getUserTeams: async (userId: number): Promise<any[]> => {
-    return apiRequest<any[]>(`/user-teams/user/${userId}`)
+  getUserTeams: async (userId: number): Promise<UserTeamDto[]> => {
+    return apiRequest<UserTeamDto[]>(`/user-teams/user/${userId}`)
   },
 
   /**
-   * 用户加入团队
+   * 用戶加入團隊
    */
   joinTeam: async (data: { userId: number; teamId: number; isOwner?: boolean }): Promise<any> => {
     return apiRequest<any>("/user-teams", {
@@ -527,7 +522,7 @@ export const userTeamApi = {
   },
 
   /**
-   * 用户离开团队
+   * 用戶離開團隊
    */
   leaveTeam: async (userId: number, teamId: number): Promise<void> => {
     return apiRequest<void>(`/user-teams/${userId}/${teamId}`, {
@@ -536,7 +531,7 @@ export const userTeamApi = {
   },
 
   /**
-   * 团队所有者移除成员
+   * 團隊所有者移除成員
    */
   removeMember: async (targetUserId: number, teamId: number): Promise<void> => {
     return apiRequest<void>(`/user-teams/remove/${targetUserId}/${teamId}`, {
@@ -545,7 +540,7 @@ export const userTeamApi = {
   },
 
   /**
-   * 当前用户加入团队
+   * 當前用戶加入團隊
    */
   currentUserJoinTeam: async (teamId: number): Promise<any> => {
     return apiRequest<any>(`/user-teams/join/${teamId}`, {
@@ -554,7 +549,7 @@ export const userTeamApi = {
   },
 
   /**
-   * 当前用户离开团队
+   * 當前用戶離開團隊
    */
   currentUserLeaveTeam: async (teamId: number): Promise<void> => {
     return apiRequest<void>(`/user-teams/leave/${teamId}`, {
@@ -564,18 +559,18 @@ export const userTeamApi = {
 }
 
 /**
- * 资源页面API
+ * 資源頁面API
  */
 export const resourcePageApi = {
   /**
-   * 获取当前用户可访问的所有资源页面
+   * 獲取當前用戶可訪問的所有資源頁面
    */
   getMyAccessible: async (): Promise<ResourcePageDto[]> => {
     return apiRequest<ResourcePageDto[]>("/resource-pages/my-accessible")
   },
 
   /**
-   * 检查用户是否有特定页面的权限
+   * 檢查用戶是否有特定頁面的權限
    */
   checkPermission: async (resourcePageCode: string, permission: string): Promise<boolean> => {
     return apiRequest<boolean>(`/resource-pages/check-permission/${resourcePageCode}/${permission}`)

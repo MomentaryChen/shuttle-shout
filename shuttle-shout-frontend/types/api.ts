@@ -137,3 +137,21 @@ export interface ResourcePageDto {
   createdAt?: string
   updatedAt?: string
 }
+
+/**
+ * 用户团队关系相关类型
+ */
+export interface UserTeamDto {
+  id: number
+  userId: number
+  teamId: number
+  isOwner?: boolean
+  createdAt?: string
+  updatedAt?: string
+  // 关联信息
+  userName?: string
+  userRealName?: string
+  userEmail?: string
+  teamName?: string
+  teamColor?: string
+}

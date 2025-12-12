@@ -58,7 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 userId = jwtUtil.getUsernameFromToken(jwt);
             } catch (Exception e) {
-                logger.error("无法从JWT token中获取用户名", e);
+                logger.error("無法從JWT token中獲取用戶名", e);
             }
         }
 

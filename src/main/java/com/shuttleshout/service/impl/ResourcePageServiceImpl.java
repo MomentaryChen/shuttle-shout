@@ -13,12 +13,13 @@ import javax.validation.Valid;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
-import org.springframework.http.HttpStatus;
 
 import com.shuttleshout.common.exception.ApiException;
+import com.shuttleshout.common.exception.ErrorCode;
 import com.shuttleshout.common.model.dto.ResourcePageCreateDTO;
 import com.shuttleshout.common.model.dto.ResourcePageDTO;
 import com.shuttleshout.common.model.dto.ResourcePageUpdateDTO;
@@ -66,7 +67,7 @@ public class ResourcePageServiceImpl extends ServiceImpl<ResourcePageRepository,
     public ResourcePageDTO getResourcePageById(Long id) {
         ResourcePagePO resourcePage = getMapper().selectOneById(id);
         if (resourcePage == null) {
-            throw new ApiException("頁面資源不存在，ID: " + id, HttpStatus.NOT_FOUND, "RESOURCE_PAGE_NOT_FOUND");
+            throw new ApiException(ErrorCode.RESOURCE_PAGE_NOT_FOUND, "頁面資源不存在，ID: " + id);
         }
         return convertToDto(resourcePage);
     }
@@ -80,7 +81,7 @@ public class ResourcePageServiceImpl extends ServiceImpl<ResourcePageRepository,
                 .where(RESOURCE_PAGE_PO.CODE.eq(code));
         ResourcePagePO resourcePage = getMapper().selectOneByQuery(queryWrapper);
         if (resourcePage == null) {
-            throw new ApiException("頁面資源不存在，代碼: " + code, HttpStatus.NOT_FOUND, "RESOURCE_PAGE_NOT_FOUND");
+            throw new ApiException(ErrorCode.RESOURCE_PAGE_NOT_FOUND, "頁面資源不存在，代碼: " + code);
         }
         return convertToDto(resourcePage);
     }
@@ -89,10 +90,11 @@ public class ResourcePageServiceImpl extends ServiceImpl<ResourcePageRepository,
      * 根據角色ID獲取該角色可訪問的所有頁面資源
      */
     @Override
+    @Transactional(readOnly = true)
     public List<ResourcePageDTO> getResourcePagesByRoleId(Long roleId) {
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .where(ROLE_RESOURCE_PAGE_PO.ROLE_ID.eq(roleId));
-        List<RoleResourcePagePO> roleResourcePages = roleResourcePageRepository.selectListByQuery(queryWrapper);
+        List<RoleResourcePagePO> roleResourcePages = roleResourcePageRepository.selectListWithRelationsByQuery(queryWrapper);
 
         return roleResourcePages.stream()
                 .map(roleResourcePage -> convertToDto(roleResourcePage.getResourcePage()))
@@ -144,7 +146,7 @@ public class ResourcePageServiceImpl extends ServiceImpl<ResourcePageRepository,
                 .where(RESOURCE_PAGE_PO.CODE.eq(resourcePageCreateDto.getCode()));
         ResourcePagePO existingResourcePage = getMapper().selectOneByQuery(queryWrapper);
         if (existingResourcePage != null) {
-            throw new ApiException("頁面資源代碼已存在: " + resourcePageCreateDto.getCode(), HttpStatus.BAD_REQUEST, "RESOURCE_PAGE_CODE_ALREADY_EXISTS");
+            throw new ApiException(ErrorCode.RESOURCE_PAGE_CODE_ALREADY_EXISTS, "頁面資源代碼已存在: " + resourcePageCreateDto.getCode());
         }
 
         ResourcePagePO resourcePage = new ResourcePagePO();
@@ -176,7 +178,7 @@ public class ResourcePageServiceImpl extends ServiceImpl<ResourcePageRepository,
     public ResourcePageDTO updateResourcePage(Long id, @Valid ResourcePageUpdateDTO resourcePageUpdateDto) {
         ResourcePagePO resourcePage = getMapper().selectOneById(id);
         if (resourcePage == null) {
-            throw new ApiException("頁面資源不存在，ID: " + id, HttpStatus.NOT_FOUND, "RESOURCE_PAGE_NOT_FOUND");
+            throw new ApiException(ErrorCode.RESOURCE_PAGE_NOT_FOUND, "頁面資源不存在，ID: " + id);
         }
 
         // 檢查代碼是否已被其他資源使用
@@ -186,7 +188,7 @@ public class ResourcePageServiceImpl extends ServiceImpl<ResourcePageRepository,
                     .and(RESOURCE_PAGE_PO.ID.ne(id));
             ResourcePagePO existingResourcePage = getMapper().selectOneByQuery(queryWrapper);
             if (existingResourcePage != null) {
-                throw new ApiException("頁面資源代碼已被使用: " + resourcePageUpdateDto.getCode(), HttpStatus.BAD_REQUEST, "RESOURCE_PAGE_CODE_ALREADY_EXISTS");
+                throw new ApiException(ErrorCode.RESOURCE_PAGE_CODE_ALREADY_EXISTS, "頁面資源代碼已被使用: " + resourcePageUpdateDto.getCode());
             }
         }
 
@@ -233,7 +235,7 @@ public class ResourcePageServiceImpl extends ServiceImpl<ResourcePageRepository,
     public void deleteResourcePage(Long id) {
         ResourcePagePO resourcePage = getMapper().selectOneById(id);
         if (resourcePage == null) {
-            throw new ApiException("頁面資源不存在，ID: " + id, HttpStatus.NOT_FOUND, "RESOURCE_PAGE_NOT_FOUND");
+            throw new ApiException(ErrorCode.RESOURCE_PAGE_NOT_FOUND, "頁面資源不存在，ID: " + id);
         }
 
         // 刪除角色關聯
@@ -262,7 +264,7 @@ public class ResourcePageServiceImpl extends ServiceImpl<ResourcePageRepository,
         for (Long roleId : roleIds) {
             RolePO role = roleRepository.selectOneById(roleId);
             if (role == null) {
-                throw new ApiException("角色不存在，ID: " + roleId, HttpStatus.NOT_FOUND, "ROLE_NOT_FOUND");
+                throw new ApiException(ErrorCode.ROLE_NOT_FOUND, "角色不存在，ID: " + roleId);
             }
 
             RoleResourcePagePO association = new RoleResourcePagePO();
@@ -328,6 +330,11 @@ public class ResourcePageServiceImpl extends ServiceImpl<ResourcePageRepository,
      * 轉換為DTO
      */
     private ResourcePageDTO convertToDto(ResourcePagePO resourcePage) {
+
+        if(ObjectUtils.isEmpty(resourcePage)) {
+            return null;
+        }
+
         ResourcePageDTO dto = new ResourcePageDTO();
         dto.setId(resourcePage.getId());
         dto.setName(resourcePage.getName());

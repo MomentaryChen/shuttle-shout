@@ -8,7 +8,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +21,7 @@ import static com.shuttleshout.common.model.po.table.RoleResourcePagePOTableDef.
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.shuttleshout.common.exception.ApiException;
+import com.shuttleshout.common.exception.ErrorCode;
 import com.shuttleshout.common.model.dto.LoginRequest;
 import com.shuttleshout.common.model.dto.LoginResponse;
 import com.shuttleshout.common.model.dto.RegisterRequest;
@@ -85,7 +85,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 创建用户
         UserDTO createdUser = userService.createUser(userCreateDto);
-        log.info("用户注册成功，用户名: {}, 用户ID: {}, 已分配 PLAYER 角色", 
+        log.info("用戶註冊成功，用戶名: {}, 用戶ID: {}, 已分配 PLAYER 角色", 
                 createdUser.getUsername(), createdUser.getId());
 
         // 返回注册成功的用户信息（不再自动登录）
@@ -102,7 +102,7 @@ public class AuthServiceImpl implements AuthService {
             // 先通过用户名查找用户，获取用户ID
             UserDTO userDto = userService.getUserByUsername(loginRequest.getUsername());
             if (userDto == null || userDto.getId() == null) {
-                throw new ApiException("用户不存在", HttpStatus.UNAUTHORIZED, "USER_NOT_FOUND");
+                throw new ApiException(ErrorCode.USER_NOT_FOUND, "用戶不存在");
             }
 
             // 使用用户ID进行认证（因为CustomUserDetailsService使用ID作为username）
@@ -134,7 +134,7 @@ public class AuthServiceImpl implements AuthService {
                     .build();
 
         } catch (BadCredentialsException e) {
-            throw new ApiException("用户名或密码错误", HttpStatus.UNAUTHORIZED, "BAD_CREDENTIALS");
+            throw new ApiException(ErrorCode.BAD_CREDENTIALS);
         } catch (ApiException e) {
             // 如果已经是 ApiException，直接抛出
             throw e;
@@ -150,7 +150,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void logout(String token) {
         // 记录登出日志
-        log.info("用户登出，token: {}", token != null && token.length() > 10 ?
+        log.info("用戶登出，token: {}", token != null && token.length() > 10 ?
                  token.substring(0, 10) + "..." : token);
     }
 
@@ -164,7 +164,7 @@ public class AuthServiceImpl implements AuthService {
         } catch (ApiException e) {
             // 如果角色不存在，创建它
             if ("ROLE_NOT_FOUND".equals(e.getErrorCode())) {
-                log.info("PLAYER 角色不存在，正在创建...");
+                log.info("PLAYER 角色不存在，正在創建...");
                 RoleDTO playerRoleDto = new RoleDTO();
                 playerRoleDto.setName("球員");
                 playerRoleDto.setCode("PLAYER");
@@ -175,7 +175,7 @@ public class AuthServiceImpl implements AuthService {
                 } catch (ApiException createException) {
                     // 如果创建失败（可能是并发创建导致代码已存在），再次尝试获取
                     if ("ROLE_CODE_ALREADY_EXISTS".equals(createException.getErrorCode())) {
-                        log.info("PLAYER 角色已被其他线程创建，重新获取...");
+                        log.info("PLAYER 角色已被其他線程創建，重新獲取...");
                         return roleService.getRoleByCode("PLAYER");
                     }
                     throw createException;
@@ -199,7 +199,7 @@ public class AuthServiceImpl implements AuthService {
         
         if (!hasAccess) {
             // 如果 PLAYER 角色没有访问权限，添加关联（不覆盖现有关联）
-            log.info("为 PLAYER 角色分配团队总览页面访问权限");
+            log.info("為 PLAYER 角色分配團隊總覽頁面訪問權限");
             addRoleResourcePageAssociation(playerRoleId, teamOverviewPage.getId());
         }
     }
@@ -226,14 +226,14 @@ public class AuthServiceImpl implements AuthService {
             association.setUpdatedAt(LocalDateTime.now());
             try {
                 roleResourcePageRepository.insert(association);
-                log.info("已为角色ID {} 添加资源页面ID {} 的访问权限", roleId, resourcePageId);
+                log.info("已為角色ID {} 添加資源頁面ID {} 的訪問權限", roleId, resourcePageId);
             } catch (Exception e) {
                 // 如果插入失败（可能是并发插入导致唯一键冲突），忽略错误
                 // 因为关联可能已经被其他线程创建了
-                log.debug("角色ID {} 和资源页面ID {} 的关联可能已存在（并发插入）", roleId, resourcePageId);
+                log.debug("角色ID {} 和資源頁面ID {} 的關聯可能已存在（並發插入）", roleId, resourcePageId);
             }
         } else {
-            log.debug("角色ID {} 和资源页面ID {} 的关联已存在", roleId, resourcePageId);
+            log.debug("角色ID {} 和資源頁面ID {} 的關聯已存在", roleId, resourcePageId);
         }
     }
 }

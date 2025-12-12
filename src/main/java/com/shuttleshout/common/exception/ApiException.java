@@ -91,6 +91,54 @@ public class ApiException extends RuntimeException {
     }
 
     /**
+     * 构造函数 - 使用 ErrorCode Enum
+     * 
+     * @param errorCode 错误代码枚举
+     */
+    public ApiException(ErrorCode errorCode) {
+        super(errorCode.getDefaultMessage());
+        this.httpStatus = errorCode.getHttpStatus();
+        this.errorCode = errorCode.getCode();
+    }
+
+    /**
+     * 构造函数 - 使用 ErrorCode Enum 和自定义消息
+     * 
+     * @param errorCode 错误代码枚举
+     * @param message 自定义异常消息
+     */
+    public ApiException(ErrorCode errorCode, String message) {
+        super(message);
+        this.httpStatus = errorCode.getHttpStatus();
+        this.errorCode = errorCode.getCode();
+    }
+
+    /**
+     * 构造函数 - 使用 ErrorCode Enum 和原因异常
+     * 
+     * @param errorCode 错误代码枚举
+     * @param cause 原因异常
+     */
+    public ApiException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode.getDefaultMessage(), cause);
+        this.httpStatus = errorCode.getHttpStatus();
+        this.errorCode = errorCode.getCode();
+    }
+
+    /**
+     * 构造函数 - 使用 ErrorCode Enum、自定义消息和原因异常
+     * 
+     * @param errorCode 错误代码枚举
+     * @param message 自定义异常消息
+     * @param cause 原因异常
+     */
+    public ApiException(ErrorCode errorCode, String message, Throwable cause) {
+        super(message, cause);
+        this.httpStatus = errorCode.getHttpStatus();
+        this.errorCode = errorCode.getCode();
+    }
+
+    /**
      * 获取HTTP状态码
      * 
      * @return HTTP状态码

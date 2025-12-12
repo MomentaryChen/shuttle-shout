@@ -28,9 +28,9 @@ export default function Page() {
 
   const handleRegisterSuccess = () => {
     setShowRegisterDialog(false)
-    // 延迟一下让AuthContext状态更新完成
+    // 延遲一下讓AuthContext狀態更新完成
+    // 註冊成功後返回當前頁面（首頁）
     setTimeout(() => {
-      router.push("/")
       router.refresh()
     }, 300)
   }
@@ -49,11 +49,19 @@ export default function Page() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => router.push("/login")}
+                  onClick={() => {
+                    // 保存當前頁面路徑，以便登錄成功後返回
+                    if (typeof window !== "undefined") {
+                      const currentPath = window.location.pathname + window.location.search
+                      router.push(`/login?returnTo=${encodeURIComponent(currentPath)}`)
+                    } else {
+                      router.push("/login")
+                    }
+                  }}
                   className="flex items-center gap-2"
                 >
                   <LogIn className="h-4 w-4" />
-                  登录
+                  登錄
                 </Button>
                 <Button
                   size="sm"

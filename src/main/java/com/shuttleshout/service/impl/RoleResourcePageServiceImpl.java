@@ -11,9 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
-import org.springframework.http.HttpStatus;
 
 import com.shuttleshout.common.exception.ApiException;
+import com.shuttleshout.common.exception.ErrorCode;
 import com.shuttleshout.common.model.dto.RoleResourcePageDTO;
 import com.shuttleshout.common.model.po.ResourcePagePO;
 import com.shuttleshout.common.model.po.RolePO;
@@ -83,13 +83,13 @@ public class RoleResourcePageServiceImpl extends ServiceImpl<RoleResourcePageRep
         // 检查角色是否存在
         RolePO role = roleRepository.selectOneById(roleId);
         if (role == null) {
-            throw new ApiException("角色不存在，ID: " + roleId, HttpStatus.NOT_FOUND, "ROLE_NOT_FOUND");
+            throw new ApiException(ErrorCode.ROLE_NOT_FOUND, "角色不存在，ID: " + roleId);
         }
 
         // 检查页面资源是否存在
         ResourcePagePO resourcePage = resourcePageRepository.selectOneById(resourcePageId);
         if (resourcePage == null) {
-            throw new ApiException("页面资源不存在，ID: " + resourcePageId, HttpStatus.NOT_FOUND, "RESOURCE_PAGE_NOT_FOUND");
+            throw new ApiException(ErrorCode.RESOURCE_PAGE_NOT_FOUND, "頁面資源不存在，ID: " + resourcePageId);
         }
 
         // 检查是否已存在关联
@@ -98,7 +98,7 @@ public class RoleResourcePageServiceImpl extends ServiceImpl<RoleResourcePageRep
                 .and(ROLE_RESOURCE_PAGE_PO.RESOURCE_PAGE_ID.eq(resourcePageId));
         RoleResourcePagePO existingAssociation = getMapper().selectOneByQuery(queryWrapper);
         if (existingAssociation != null) {
-            throw new ApiException("角色与页面资源的关联已存在", HttpStatus.BAD_REQUEST, "ROLE_RESOURCE_PAGE_ASSOCIATION_ALREADY_EXISTS");
+            throw new ApiException(ErrorCode.ROLE_RESOURCE_PAGE_ASSOCIATION_ALREADY_EXISTS);
         }
 
         RoleResourcePagePO association = new RoleResourcePagePO();
@@ -123,7 +123,7 @@ public class RoleResourcePageServiceImpl extends ServiceImpl<RoleResourcePageRep
                 .and(ROLE_RESOURCE_PAGE_PO.RESOURCE_PAGE_ID.eq(resourcePageId));
         RoleResourcePagePO association = getMapper().selectOneByQuery(queryWrapper);
         if (association == null) {
-            throw new ApiException("角色与页面资源的关联不存在", HttpStatus.NOT_FOUND, "ROLE_RESOURCE_PAGE_ASSOCIATION_NOT_FOUND");
+            throw new ApiException(ErrorCode.ROLE_RESOURCE_PAGE_ASSOCIATION_NOT_FOUND);
         }
 
         getMapper().deleteById(association.getId());
@@ -139,7 +139,7 @@ public class RoleResourcePageServiceImpl extends ServiceImpl<RoleResourcePageRep
                 .and(ROLE_RESOURCE_PAGE_PO.RESOURCE_PAGE_ID.eq(resourcePageId));
         RoleResourcePagePO association = getMapper().selectOneByQuery(queryWrapper);
         if (association == null) {
-            throw new ApiException("角色与页面资源的关联不存在", HttpStatus.NOT_FOUND, "ROLE_RESOURCE_PAGE_ASSOCIATION_NOT_FOUND");
+            throw new ApiException(ErrorCode.ROLE_RESOURCE_PAGE_ASSOCIATION_NOT_FOUND);
         }
 
         if (canRead != null) {

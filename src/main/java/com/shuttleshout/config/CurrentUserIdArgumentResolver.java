@@ -36,7 +36,7 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalStateException("用户未认证");
+            throw new IllegalStateException("用戶未認證");
         }
 
         Object principal = authentication.getPrincipal();
@@ -46,7 +46,7 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
             try {
                 return Long.parseLong(username);
             } catch (NumberFormatException e) {
-                throw new IllegalStateException("无法从认证信息中解析用户ID: " + username);
+                throw new IllegalStateException("無法從認證資訊中解析用戶ID: " + username);
             }
         }
         
@@ -55,11 +55,11 @@ public class CurrentUserIdArgumentResolver implements HandlerMethodArgumentResol
             try {
                 return Long.parseLong((String) principal);
             } catch (NumberFormatException e) {
-                throw new IllegalStateException("无法从认证信息中解析用户ID: " + principal);
+                throw new IllegalStateException("無法從認證資訊中解析用戶ID: " + principal);
             }
         }
         
-        throw new IllegalStateException("无法获取当前用户ID");
+        throw new IllegalStateException("無法獲取當前用戶ID");
     }
 }
 

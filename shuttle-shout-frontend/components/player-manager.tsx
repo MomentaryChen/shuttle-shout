@@ -65,8 +65,8 @@ export function PlayerManager({ players, teams, courts, onPlayersChange }: Playe
       setNewPlayerName("")
       toast.success("人員添加成功")
     } catch (error) {
-      console.error("添加人員失败:", error)
-      toast.error("添加人員失败，请重试")
+      console.error("添加人員失敗:", error)
+      toast.error("添加人員失敗，請重試")
     } finally {
       setIsAdding(false)
     }

@@ -61,7 +61,7 @@ export function CallingSystem({
       const playerIdNum = parseInt(playerId)
       const courtIdNum = parseInt(courtId)
       
-      // 先获取所有等待中的队列，找到对应的队列ID
+      // 先獲取所有等待中的隊列，找到對應的隊列ID
       const waitingQueues = await queueApi.getWaiting()
       const targetQueue = waitingQueues.find((q) => q.playerId === playerIdNum)
       
@@ -70,21 +70,21 @@ export function CallingSystem({
         return
       }
       
-      // 调用API叫号
+      // 調用API叫號
       await queueApi.call(targetQueue.id, courtIdNum)
       
-      // 更新本地状态
+      // 更新本地狀態
       onPlayerStatusChange(playerId, "playing")
       onPlayerCourtChange(playerId, courtId)
       onCourtStatusChange(courtId, "occupied")
       
-      // 刷新队列
+      // 刷新隊列
       await onQueueUpdate([])
       
       toast.success("叫號成功")
     } catch (error) {
-      console.error("叫號失败:", error)
-      toast.error("叫號失败，请重试")
+      console.error("叫號失敗:", error)
+      toast.error("叫號失敗，請重試")
     }
   }
 
@@ -92,40 +92,40 @@ export function CallingSystem({
     const court = getCourtById(courtId)
     if (!court) return
 
-    // Find playing players on this court
+    // 查找此場地正在進行的玩家
     const playingPlayers = players.filter((p) => p.courtId === courtId && p.status === "playing")
 
     try {
-      // 获取所有队列，找到正在进行的队列
+      // 獲取所有隊列，找到正在進行的隊列
       const allQueues = await queueApi.getAll()
       const courtIdNum = parseInt(courtId)
 
-      // 完成所有正在进行的队列
+      // 完成所有正在進行的隊列
       for (const player of playingPlayers) {
         const playerIdNum = parseInt(player.id)
-        // 查找该玩家在此场地的队列
+        // 查找該玩家在此場地的隊列
         const playerQueue = allQueues.find(
           (q) => q.playerId === playerIdNum && q.courtId === courtIdNum && q.status === "CALLED"
         )
 
         if (playerQueue) {
           try {
-            // 完成服务
+            // 完成服務
             await queueApi.serve(playerQueue.id)
           } catch (error) {
-            console.error(`完成玩家 ${player.id} 的服务失败:`, error)
+            console.error(`完成玩家 ${player.id} 的服務失敗:`, error)
           }
         }
 
-        // 更新本地状态
+        // 更新本地狀態
         onPlayerStatusChange(player.id, "rest")
         onPlayerCourtChange(player.id, undefined)
       }
 
-      // Update court status
+      // 更新場地狀態
       await onCourtStatusChange(courtId, "available")
 
-      // 刷新队列
+      // 刷新隊列
       await onQueueUpdate([])
 
       toast.success("比賽結束")
@@ -137,8 +137,8 @@ export function CallingSystem({
         }, 500)
       }
     } catch (error) {
-      console.error("結束比賽失败:", error)
-      toast.error("結束比賽失败，请重试")
+      console.error("結束比賽失敗:", error)
+      toast.error("結束比賽失敗，請重試")
     }
   }
 

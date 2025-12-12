@@ -111,6 +111,23 @@ CREATE TABLE `user_teams` (
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COMMENT='球隊用戶關聯表';
 
 -- ============================================
+-- 表結構: team_courts - 球隊場地表
+-- ============================================
+DROP TABLE IF EXISTS `team_courts`;
+CREATE TABLE `team_courts` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '場地ID',
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '場地名稱',
+  `team_id` bigint(20) NOT NULL COMMENT '所屬球隊ID',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否啟用',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '建立時間',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新時間',
+  PRIMARY KEY (`id`),
+  KEY `idx_team_court_team` (`team_id`),
+  KEY `idx_team_court_active` (`is_active`),
+  CONSTRAINT `fk_team_courts_team` FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='球隊場地表';
+
+-- ============================================
 -- 表結構: resource_pages - 頁面資源表
 -- ============================================
 DROP TABLE IF EXISTS `resource_pages`;
@@ -157,6 +174,40 @@ CREATE TABLE `role_resource_pages` (
   CONSTRAINT `fk_role_resource_pages_resource_page_id` FOREIGN KEY (`resource_page_id`) REFERENCES `resource_pages` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_role_resource_pages_role_id` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='角色頁面資源權限關聯表';
+
+-- ============================================
+-- 表結構: matches - 比賽表
+-- ============================================
+DROP TABLE IF EXISTS `matches`;
+CREATE TABLE `matches` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '比賽ID',
+  `team_id` bigint(20) NOT NULL COMMENT '所屬球隊ID',
+  `court_id` bigint(20) NOT NULL COMMENT '場地ID',
+  `player1_id` bigint(20) DEFAULT NULL COMMENT '球員1用戶ID',
+  `player2_id` bigint(20) DEFAULT NULL COMMENT '球員2用戶ID',
+  `player3_id` bigint(20) DEFAULT NULL COMMENT '球員3用戶ID',
+  `player4_id` bigint(20) DEFAULT NULL COMMENT '球員4用戶ID',
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ONGOING' COMMENT '比賽狀態：ONGOING(進行中), FINISHED(已完成), CANCELLED(已取消)',
+  `started_at` datetime NOT NULL COMMENT '比賽開始時間',
+  `ended_at` datetime DEFAULT NULL COMMENT '比賽結束時間',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '建立時間',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新時間',
+  PRIMARY KEY (`id`),
+  KEY `idx_match_team` (`team_id`),
+  KEY `idx_match_court` (`court_id`),
+  KEY `idx_match_status` (`status`),
+  KEY `idx_match_started_at` (`started_at`),
+  KEY `idx_match_player1` (`player1_id`),
+  KEY `idx_match_player2` (`player2_id`),
+  KEY `idx_match_player3` (`player3_id`),
+  KEY `idx_match_player4` (`player4_id`),
+  CONSTRAINT `fk_matches_team` FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_matches_court` FOREIGN KEY (`court_id`) REFERENCES `team_courts` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_matches_player1` FOREIGN KEY (`player1_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_matches_player2` FOREIGN KEY (`player2_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_matches_player3` FOREIGN KEY (`player3_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_matches_player4` FOREIGN KEY (`player4_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='比賽表';
 
 -- 恢復外鍵檢查
 SET FOREIGN_KEY_CHECKS = 1;

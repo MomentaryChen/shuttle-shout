@@ -237,7 +237,15 @@ export function SidebarNavigation() {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      onClick={() => router.push("/login")}
+                      onClick={() => {
+                        // 保存當前頁面路徑，以便登錄成功後返回
+                        if (typeof window !== "undefined") {
+                          const currentPath = window.location.pathname + window.location.search
+                          router.push(`/login?returnTo=${encodeURIComponent(currentPath)}`)
+                        } else {
+                          router.push("/login")
+                        }
+                      }}
                       tooltip="登入系統"
                     >
                       <User className="size-4" />

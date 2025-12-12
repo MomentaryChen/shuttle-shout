@@ -16,9 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mybatisflex.core.query.QueryWrapper;
 
-import org.springframework.http.HttpStatus;
 
 import com.shuttleshout.common.exception.ApiException;
+import com.shuttleshout.common.exception.ErrorCode;
 import com.shuttleshout.common.model.dto.UserTeamCreateDTO;
 import com.shuttleshout.common.model.dto.UserTeamDTO;
 import com.shuttleshout.common.model.po.TeamPO;
@@ -82,13 +82,13 @@ public class UserTeamServiceImpl implements UserTeamService {
         // 检查用户是否存在
         UserPO user = userRepository.selectOneById(userTeamCreateDto.getUserId());
         if (user == null) {
-            throw new ApiException("用户不存在，ID: " + userTeamCreateDto.getUserId(), HttpStatus.NOT_FOUND, "USER_NOT_FOUND");
+            throw new ApiException(ErrorCode.USER_NOT_FOUND, "用戶不存在，ID: " + userTeamCreateDto.getUserId());
         }
 
         // 检查团队是否存在
         TeamPO team = teamRepository.selectOneById(userTeamCreateDto.getTeamId());
         if (team == null) {
-            throw new ApiException("团队不存在，ID: " + userTeamCreateDto.getTeamId(), HttpStatus.NOT_FOUND, "TEAM_NOT_FOUND");
+            throw new ApiException(ErrorCode.TEAM_NOT_FOUND, "團隊不存在，ID: " + userTeamCreateDto.getTeamId());
         }
 
         // 检查用户是否已经在团队中
@@ -98,7 +98,7 @@ public class UserTeamServiceImpl implements UserTeamService {
 
         UserTeamPO existing = userTeamRepository.selectOneByQuery(existingQuery);
         if (existing != null) {
-            throw new ApiException("用户已经在团队中", HttpStatus.BAD_REQUEST, "USER_ALREADY_IN_TEAM");
+            throw new ApiException(ErrorCode.USER_ALREADY_IN_TEAM);
         }
 
         // 创建用户团队关系
@@ -125,12 +125,12 @@ public class UserTeamServiceImpl implements UserTeamService {
 
         UserTeamPO userTeam = userTeamRepository.selectOneByQuery(queryWrapper);
         if (userTeam == null) {
-            throw new ApiException("用户不在团队中", HttpStatus.BAD_REQUEST, "USER_NOT_IN_TEAM");
+            throw new ApiException(ErrorCode.USER_NOT_IN_TEAM);
         }
 
         // 如果是团队所有者，不能离开团队
         if (userTeam.getIsOwner()) {
-            throw new ApiException("团队所有者不能离开团队，请先转让所有权或删除团队", HttpStatus.BAD_REQUEST, "TEAM_OWNER_CANNOT_LEAVE");
+            throw new ApiException(ErrorCode.TEAM_OWNER_CANNOT_LEAVE);
         }
 
         userTeamRepository.deleteById(userTeam.getId());
@@ -147,7 +147,7 @@ public class UserTeamServiceImpl implements UserTeamService {
 
         UserTeamPO remover = userTeamRepository.selectOneByQuery(removerQuery);
         if (remover == null) {
-            throw new ApiException("只有团队所有者才能移除成员", HttpStatus.FORBIDDEN, "ONLY_TEAM_OWNER_CAN_REMOVE_MEMBER");
+            throw new ApiException(ErrorCode.ONLY_TEAM_OWNER_CAN_REMOVE_MEMBER);
         }
 
         // 检查目标用户是否在团队中
@@ -157,17 +157,17 @@ public class UserTeamServiceImpl implements UserTeamService {
 
         UserTeamPO targetUserTeam = userTeamRepository.selectOneByQuery(targetQuery);
         if (targetUserTeam == null) {
-            throw new ApiException("目标用户不在团队中", HttpStatus.BAD_REQUEST, "TARGET_USER_NOT_IN_TEAM");
+            throw new ApiException(ErrorCode.TARGET_USER_NOT_IN_TEAM);
         }
 
         // 团队所有者不能移除自己
         if (targetUserId.equals(removerUserId)) {
-            throw new ApiException("团队所有者不能移除自己，请删除整个团队", HttpStatus.BAD_REQUEST, "TEAM_OWNER_CANNOT_REMOVE_SELF");
+            throw new ApiException(ErrorCode.TEAM_OWNER_CANNOT_REMOVE_SELF);
         }
 
         // 如果目标用户是团队所有者，不能移除（虽然正常情况下所有者只有一个）
         if (targetUserTeam.getIsOwner()) {
-            throw new ApiException("不能移除团队所有者", HttpStatus.BAD_REQUEST, "CANNOT_REMOVE_TEAM_OWNER");
+            throw new ApiException(ErrorCode.CANNOT_REMOVE_TEAM_OWNER);
         }
 
         userTeamRepository.deleteById(targetUserTeam.getId());

@@ -46,7 +46,7 @@ public class RoleController {
             List<RoleDTO> roles = roleService.getAllRoles();
             return ResponseEntity.ok(roles);
         } catch (Exception e) {
-            throw new ApiException("获取角色列表失败: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, "GET_ROLES_ERROR", e);
+            throw new ApiException("獲取角色列表失敗: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, "GET_ROLES_ERROR", e);
         }
     }
 
@@ -60,7 +60,7 @@ public class RoleController {
             RoleDTO role = roleService.getRoleById(id);
             return ResponseEntity.ok(role);
         } catch (Exception e) {
-            throw new ApiException("获取角色失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "GET_ROLE_ERROR", e);
+            throw new ApiException("獲取角色失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "GET_ROLE_ERROR", e);
         }
     }
 
@@ -74,7 +74,7 @@ public class RoleController {
             RoleDTO role = roleService.getRoleByCode(code);
             return ResponseEntity.ok(role);
         } catch (Exception e) {
-            throw new ApiException("获取角色失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "GET_ROLE_ERROR", e);
+            throw new ApiException("獲取角色失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "GET_ROLE_ERROR", e);
         }
     }
 
@@ -88,7 +88,7 @@ public class RoleController {
             RoleDTO createdRole = roleService.createRole(roleDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdRole);
         } catch (Exception e) {
-            throw new ApiException("创建角色失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "CREATE_ROLE_ERROR", e);
+            throw new ApiException("創建角色失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "CREATE_ROLE_ERROR", e);
         }
     }
 
@@ -102,7 +102,7 @@ public class RoleController {
             RoleDTO updatedRole = roleService.updateRole(id, roleDto);
             return ResponseEntity.ok(updatedRole);
         } catch (Exception e) {
-            throw new ApiException("更新角色失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "UPDATE_ROLE_ERROR", e);
+            throw new ApiException("更新角色失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "UPDATE_ROLE_ERROR", e);
         }
     }
 
@@ -116,7 +116,7 @@ public class RoleController {
             roleService.deleteRole(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            throw new ApiException("删除角色失败: " + e.getMessage(), HttpStatus.BAD_REQUEST, "DELETE_ROLE_ERROR", e);
+            throw new ApiException("刪除角色失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "DELETE_ROLE_ERROR", e);
         }
     }
 }

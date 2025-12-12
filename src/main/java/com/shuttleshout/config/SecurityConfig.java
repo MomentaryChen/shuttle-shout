@@ -105,6 +105,8 @@ public class SecurityConfig {
                 .antMatchers(HttpMethod.GET, "/teams").permitAll()
                 .antMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
                 .antMatchers("/error").permitAll()
+                // WebSocket端點允許訪問
+                .antMatchers("/ws/**").permitAll()
                 // 其他請求需要認證
                 .anyRequest().authenticated()
                 .and()

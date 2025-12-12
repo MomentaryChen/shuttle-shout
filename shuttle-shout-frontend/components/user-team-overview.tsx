@@ -33,7 +33,8 @@ import {
   UserPlus,
   CheckCircle2,
   Eye,
-  LogOut
+  LogOut,
+  PlayCircle
 } from "lucide-react"
 
 export function UserTeamOverview() {
@@ -139,12 +140,12 @@ export function UserTeamOverview() {
     }
   }, [filteredTeams])
 
-  // 加入团队
+  // 加入團隊
   const handleJoinTeam = async (teamId: number) => {
-    // 如果未登录，显示注册对话框
+    // 如果未登錄，跳轉到登錄頁面
     if (!isAuthenticated) {
-      setSelectedTeamId(teamId)
-      setShowRegisterDialog(true)
+      const currentPath = window.location.pathname + window.location.search
+      router.push(`/login?returnTo=${encodeURIComponent(currentPath)}`)
       return
     }
 
@@ -168,14 +169,16 @@ export function UserTeamOverview() {
     }
   }
 
-  // 注册成功后的回调
+  // 註冊成功後的回調
   const handleRegisterSuccess = () => {
     setShowRegisterDialog(false)
-    // 延迟一下让AuthContext状态更新完成
+    // 延遲一下讓AuthContext狀態更新完成
+    // 註冊成功後保持在當前頁面，如果之前選擇了團隊則自動加入
     setTimeout(() => {
       if (selectedTeamId !== null) {
         handleJoinTeam(selectedTeamId)
       }
+      // 刷新頁面以更新狀態，保持在當前頁面
       router.refresh()
     }, 300)
   }
@@ -524,6 +527,21 @@ export function UserTeamOverview() {
                                 <Button
                                   size="icon"
                                   variant="ghost"
+                                  onClick={() => router.push(`/team-calling?teamId=${team.id}`)}
+                                  className="h-8 w-8 rounded-full hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
+                                >
+                                  <PlayCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                <p className="text-xs">進入叫號系統</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
                                   onClick={() => handleViewTeamMembers(team)}
                                   className="h-8 w-8 rounded-full hover:bg-green-50 dark:hover:bg-green-950/50 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200"
                                 >
@@ -563,7 +581,15 @@ export function UserTeamOverview() {
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    onClick={() => handleJoinTeam(team.id)}
+                                    onClick={() => {
+                                      if (!isAuthenticated) {
+                                        // 未登錄時，跳轉到登錄頁面，並保存當前頁面路徑
+                                        const currentPath = window.location.pathname + window.location.search
+                                        router.push(`/login?returnTo=${encodeURIComponent(currentPath)}`)
+                                      } else {
+                                        handleJoinTeam(team.id)
+                                      }
+                                    }}
                                     disabled={joinLoading === team.id || !team.isActive}
                                     className="h-8 w-8 rounded-full hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                                   >
@@ -582,7 +608,7 @@ export function UserTeamOverview() {
                                       ? "團隊非活躍，無法加入"
                                       : isAuthenticated
                                       ? "點擊加入團隊"
-                                      : "登錄後即可加入團隊"}
+                                      : "點擊前往登錄"}
                                   </p>
                                 </TooltipContent>
                               </Tooltip>

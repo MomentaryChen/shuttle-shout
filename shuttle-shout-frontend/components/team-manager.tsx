@@ -69,8 +69,8 @@ export function TeamManager({ teams, teamsData, onTeamsChange }: TeamManagerProp
       setCourtCount(2)
       toast.success("球隊添加成功")
     } catch (error) {
-      console.error("添加球隊失败:", error)
-      toast.error("添加球隊失败，请重试")
+      console.error("添加球隊失敗:", error)
+      toast.error("添加球隊失敗，請重試")
     } finally {
       setIsAdding(false)
     }

@@ -11,9 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
-import org.springframework.http.HttpStatus;
 
 import com.shuttleshout.common.exception.ApiException;
+import com.shuttleshout.common.exception.ErrorCode;
 import com.shuttleshout.common.model.dto.RoleDTO;
 import com.shuttleshout.common.model.po.RolePO;
 import com.shuttleshout.common.model.po.UserPO;
@@ -48,7 +48,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleRepository, RolePO> impleme
     public RoleDTO getRoleById(Long id) {
         RolePO role = getMapper().selectOneById(id);
         if (role == null) {
-            throw new ApiException("角色不存在，ID: " + id, HttpStatus.NOT_FOUND, "ROLE_NOT_FOUND");
+            throw new ApiException(ErrorCode.ROLE_NOT_FOUND, "角色不存在，ID: " + id);
         }
         return convertToDto(role);
     }
@@ -62,7 +62,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleRepository, RolePO> impleme
                 .where(ROLE_PO.CODE.eq(code));
         RolePO role = getMapper().selectOneByQuery(queryWrapper);
         if (role == null) {
-            throw new ApiException("角色不存在，代码: " + code, HttpStatus.NOT_FOUND, "ROLE_NOT_FOUND");
+            throw new ApiException(ErrorCode.ROLE_NOT_FOUND, "角色不存在，代碼: " + code);
         }
         return convertToDto(role);
     }
@@ -77,7 +77,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleRepository, RolePO> impleme
                 .where(ROLE_PO.CODE.eq(roleDto.getCode()));
         RolePO existingRole = getMapper().selectOneByQuery(queryWrapper);
         if (existingRole != null) {
-            throw new ApiException("角色代码已存在: " + roleDto.getCode(), HttpStatus.BAD_REQUEST, "ROLE_CODE_ALREADY_EXISTS");
+            throw new ApiException(ErrorCode.ROLE_CODE_ALREADY_EXISTS, "角色代碼已存在: " + roleDto.getCode());
         }
 
         RolePO role = new RolePO();
@@ -99,7 +99,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleRepository, RolePO> impleme
     public RoleDTO updateRole(Long id, @Valid RoleDTO roleDto) {
         RolePO role = getMapper().selectOneById(id);
         if (role == null) {
-            throw new ApiException("角色不存在，ID: " + id, HttpStatus.NOT_FOUND, "ROLE_NOT_FOUND");
+            throw new ApiException(ErrorCode.ROLE_NOT_FOUND, "角色不存在，ID: " + id);
         }
 
         // 如果代码改变，检查新代码是否已存在
@@ -109,7 +109,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleRepository, RolePO> impleme
                     .and(ROLE_PO.ID.ne(id));
             RolePO existingRole = getMapper().selectOneByQuery(queryWrapper);
             if (existingRole != null) {
-                throw new ApiException("角色代码已存在: " + roleDto.getCode(), HttpStatus.BAD_REQUEST, "ROLE_CODE_ALREADY_EXISTS");
+                throw new ApiException(ErrorCode.ROLE_CODE_ALREADY_EXISTS, "角色代碼已存在: " + roleDto.getCode());
             }
         }
 
@@ -138,7 +138,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleRepository, RolePO> impleme
     public void deleteRole(Long id) {
         RolePO role = getMapper().selectOneById(id);
         if (role == null) {
-            throw new ApiException("角色不存在，ID: " + id, HttpStatus.NOT_FOUND, "ROLE_NOT_FOUND");
+            throw new ApiException(ErrorCode.ROLE_NOT_FOUND, "角色不存在，ID: " + id);
         }
         getMapper().deleteById(id);
     }
