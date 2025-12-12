@@ -11,10 +11,14 @@
 **Note:** This project is currently under active development. Currently implemented features:
 
 - ✅ User authentication and authorization (registration, login, JWT tokens)
-- ✅ Team management (create, update, delete teams, member management)
+- ✅ User profile management
+- ✅ Team management (create, update, delete teams, member management, team levels)
 - ✅ Resource page management and role-based access control
+- ✅ WebSocket real-time team calling system
+- ✅ Court management (create, update, query courts, player assignment)
+- ✅ Match management (create, finish matches, track match status)
 
-Other features (player management, court management, queue system) are planned for future releases.
+Other features (player management, queue history, statistics) are planned for future releases.
 
 ---
 
@@ -86,6 +90,11 @@ gradlew.bat bootRun
 
 Backend will run at http://localhost:8080/api
 
+### WebSocket Connection
+
+The WebSocket endpoint for real-time team calling system:
+- WebSocket URL: `ws://localhost:18080/api/ws?teamId={teamId}`
+
 ### API Documentation
 
 After starting the backend, access the following URLs to view API documentation:
@@ -94,33 +103,52 @@ After starting the backend, access the following URLs to view API documentation:
 
 ## Features
 
-### Player Management
-- ✅ Create and manage player information
-- ✅ Search players
-- ✅ Update player information
-
-### Court Management
-- ✅ Create and manage courts
-- ✅ Enable/disable courts
-- ✅ View court status
-
-### Queue System
-- ✅ Join waiting queue
-- ✅ Calling functionality
-- ✅ Complete service
-- ✅ Cancel queue
-- ✅ View waiting list
-
 ### User Authentication & Authorization
 - ✅ User registration and login
 - ✅ Role-based access control (RBAC)
 - ✅ JWT token authentication
 - ✅ Resource page management
+- ✅ User profile management
 
 ### Team Management
 - ✅ Create and manage teams
 - ✅ Team member management
 - ✅ Team level management
+
+### Player Management
+- ⏳ Create and manage player information (Planned)
+- ⏳ Search players (Planned)
+- ⏳ Update player information (Planned)
+
+### Court Management
+- ✅ Create and manage courts
+- ✅ Initialize courts for teams
+- ✅ Assign players to courts
+- ✅ Remove players from courts
+- ✅ View court status and player assignments
+- ✅ Batch update court players
+
+### Team Calling System (WebSocket)
+- ✅ Real-time WebSocket communication
+- ✅ Assign players to courts in real-time
+- ✅ Remove players from courts
+- ✅ Auto-assign players to courts
+- ✅ Finish matches
+- ✅ Real-time court status updates
+- ✅ Real-time queue updates
+- ✅ Multi-client synchronization
+
+### Match Management
+- ✅ Create matches
+- ✅ Track match status (ONGOING, FINISHED, CANCELLED)
+- ✅ Finish matches
+- ✅ Query ongoing matches
+- ✅ Match history tracking
+
+### Queue System
+- ⏳ Join waiting queue (Planned)
+- ⏳ Queue history records (Planned)
+- ⏳ Statistics and reporting (Planned)
 
 ## UI Demo
 
@@ -149,10 +177,12 @@ Below are screenshots of the main features of the system:
 
 ## Development Roadmap
 
-- [ ] WebSocket real-time notifications
+- [x] WebSocket real-time notifications
+- [x] Court management
+- [x] Match management
+- [x] User authentication and authorization
 - [ ] Queue history records
 - [ ] Statistics and reporting features
-- [x] User authentication and authorization
 - [ ] Multi-language support
 
 ## License

@@ -5,9 +5,41 @@
 格式基於 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 版本號遵循 [語義化版本](https://semver.org/lang/zh-CN/)。
 
-## [未發布] - 2025-12-11
+## [未發布] - 2025-12-12
 
 ### 新增
+- **WebSocket 團隊叫號系統**
+  - 新增 `TeamCallingWebSocketHandler` 處理實時 WebSocket 連接
+  - 實現策略模式 (`MessageStrategyFactory`) 處理不同類型的 WebSocket 消息
+  - 支援以下消息類型：
+    - `ASSIGN_PLAYER` - 分配球員到場地
+    - `REMOVE_PLAYER` - 從場地移除球員
+    - `AUTO_ASSIGN` - 自動批量分配球員
+    - `FINISH_MATCH` - 完成比賽
+    - `COURT_UPDATE` - 場地狀態更新
+    - `QUEUE_UPDATE` - 等待隊列更新
+  - 自動更新數據庫 `team_courts` 表，實現實時球員分配的持久化
+  - 支援多客戶端實時同步
+  - 前端新增團隊叫號系統組件 (`team-calling-system.tsx`)
+
+- **球場管理功能**
+  - 新增 `CourtController` 和 `CourtService` 實現球場管理
+  - 支援根據團隊ID獲取場地列表 (`/api/courts/team/{teamId}`)
+  - 支援初始化團隊場地 (`/api/courts/team/{teamId}/initialize`)
+  - 支援創建、更新、查詢場地
+  - 支援球員分配到場地功能 (`assignPlayerToCourt`)
+  - 支援從場地移除球員功能 (`removePlayerFromCourt`)
+  - 支援批量更新場地球員 (`updateCourtPlayers`)
+  - 支援清空場地球員信息 (`clearCourtPlayers`)
+
+- **比賽管理功能**
+  - 新增 `MatchService` 和 `MatchServiceImpl` 實現比賽管理
+  - 支援創建比賽記錄 (`createMatch`)
+  - 支援創建待開始比賽 (`createPendingMatch`)
+  - 支援完成比賽 (`finishMatch`)
+  - 支援查詢進行中的比賽 (`getOngoingMatches`)
+  - 比賽狀態管理（ONGOING, FINISHED, CANCELLED）
+
 - **用戶註冊功能**
   - 新增用戶註冊 API 端點 (`/api/auth/register`)
   - 新增 `RegisterRequest` DTO，支援用戶名、密碼、郵箱、手機號和真實姓名註冊
@@ -44,6 +76,7 @@
   - 更新側邊欄導航，添加個人資料入口
   - 改進團隊管理組件 (`team-manager.tsx`)
   - 更新用戶團隊概覽組件 (`user-team-overview.tsx`)
+  - 新增比賽管理組件 (`match-management.tsx`)
   - 優化 API 調用和類型定義
 
 ### 修改
@@ -53,6 +86,9 @@
   - 更新多個 DTO 類 (`TeamDTO`, `TeamCreateDTO`, `TeamUpdateDTO`)
   - 更新 `TeamPO` 和 `UserPO` 實體類
   - 改進控制器日誌記錄切面 (`ControllerLoggingAspect`)
+  - 優化 WebSocket 配置 (`WebSocketConfig`, `SimpleWebSocketConfig`)
+  - 改進 `CourtService` 實現，支援球員分配和移除操作
+  - 完善 `MatchService` 實現，支援比賽生命週期管理
 
 - **前端改進**
   - 更新所有主要頁面組件
@@ -60,11 +96,13 @@
   - 更新系統設置組件
   - 優化 API 客戶端 (`api.ts`)
   - 更新類型定義 (`types/api.ts`)
+  - 改進 WebSocket 連接管理和錯誤處理
 
 ### 文檔
 - 新增 `README_ZH.md` 中文版專案說明
 - 更新 `README.md` 專案文檔
 - 新增專案截圖展示
+- 新增 `TEAM_CALLING_UPDATE_SUMMARY.md` 團隊叫號系統更新文檔
 
 ## [0.1.0] - 2025-12-11
 
