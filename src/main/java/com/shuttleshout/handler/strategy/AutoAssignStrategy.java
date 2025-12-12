@@ -1,9 +1,12 @@
 package com.shuttleshout.handler.strategy;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -72,8 +75,8 @@ public class AutoAssignStrategy implements WebSocketMessageStrategy {
                 return;
             }
             
-            // 獲取場地信息
-            Court court = courtService.getCourtById(courtId);
+            // 驗證場地是否存在（如果不存在會拋出異常）
+            courtService.getCourtById(courtId);
             
             // 獲取團隊成員列表
             List<UserTeamDTO> teamMembers = userTeamService.getTeamMembers(teamId);
@@ -85,22 +88,39 @@ public class AutoAssignStrategy implements WebSocketMessageStrategy {
                 return;
             }
             
-            // 獲取場地上已有的球員ID列表（從 matches 表中獲取）
-            List<Long> existingPlayerIds = new ArrayList<>();
-            List<Long> playersOnCourt = courtService.getPlayersOnCourt(courtId);
-            for (Long playerId : playersOnCourt) {
-                if (playerId != null) {
-                    existingPlayerIds.add(playerId);
+            // 獲取團隊的所有場地
+            List<Court> courts = courtService.getCourtsByTeamId(teamId);
+            
+            // 收集所有在場地上的球員ID（從 matches 表中獲取）
+            // 這包括所有場地，而不僅僅是當前場地，避免重複分配已在其他場地的球員
+            Set<Long> allPlayersOnCourt = new HashSet<>();
+            if (courts != null) {
+                for (Court c : courts) {
+                    List<Long> players = courtService.getPlayersOnCourt(c.getId());
+                    for (Long playerId : players) {
+                        if (playerId != null) {
+                            allPlayersOnCourt.add(playerId);
+                        }
+                    }
                 }
             }
             
-            // 從團隊成員中過濾出不在場地上的成員
+            // 獲取當前場地上已有的球員ID列表（用於計算需要分配的人數）
+            List<Long> currentCourtPlayerIds = new ArrayList<>();
+            List<Long> playersOnCurrentCourt = courtService.getPlayersOnCourt(courtId);
+            for (Long playerId : playersOnCurrentCourt) {
+                if (playerId != null) {
+                    currentCourtPlayerIds.add(playerId);
+                }
+            }
+            
+            // 從團隊成員中過濾出不在任何場地上的成員
             List<UserTeamDTO> availableMembers = teamMembers.stream()
-                    .filter(member -> !existingPlayerIds.contains(member.getUserId()))
+                    .filter(member -> !allPlayersOnCourt.contains(member.getUserId()))
                     .collect(Collectors.toList());
             
-            // 計算需要分配的人數（補滿4人）
-            int neededPlayers = 4 - existingPlayerIds.size();
+            // 計算需要分配的人數（補滿4人，只考慮當前場地）
+            int neededPlayers = 4 - currentCourtPlayerIds.size();
             
             if (availableMembers.size() < neededPlayers) {
                 log.warn("可用成員不足: 需要 {} 人，但只有 {} 人可用", neededPlayers, availableMembers.size());
@@ -113,12 +133,12 @@ public class AutoAssignStrategy implements WebSocketMessageStrategy {
             // 選擇前 neededPlayers 位成員
             List<UserTeamDTO> selectedMembers = availableMembers.subList(0, neededPlayers);
             
-            // 獲取場地上已有的球員位置（從 matches 表中獲取）
-            Match existingMatch = matchService.getOngoingMatchByCourtId(courtId);
-            Long player1Id = existingMatch != null ? existingMatch.getPlayer1Id() : null;
-            Long player2Id = existingMatch != null ? existingMatch.getPlayer2Id() : null;
-            Long player3Id = existingMatch != null ? existingMatch.getPlayer3Id() : null;
-            Long player4Id = existingMatch != null ? existingMatch.getPlayer4Id() : null;
+            // 獲取場地上已有的球員位置（從 court 表中獲取）
+            Court currentCourt = courtService.getCourtById(courtId);
+            Long player1Id = currentCourt != null ? currentCourt.getPlayer1Id() : null;
+            Long player2Id = currentCourt != null ? currentCourt.getPlayer2Id() : null;
+            Long player3Id = currentCourt != null ? currentCourt.getPlayer3Id() : null;
+            Long player4Id = currentCourt != null ? currentCourt.getPlayer4Id() : null;
             
             // 為新選中的成員分配位置（補滿4人）
             for (UserTeamDTO member : selectedMembers) {
@@ -134,7 +154,25 @@ public class AutoAssignStrategy implements WebSocketMessageStrategy {
                 }
             }
             
-            // 注意：不再更新 team_courts 表，球員信息只存儲在 matches 表中
+            // 更新 court 表上的球員信息和比賽開始時間
+            try {
+                Court court = courtService.getCourtById(courtId);
+                if (court != null) {
+                    court.setPlayer1Id(player1Id);
+                    court.setPlayer2Id(player2Id);
+                    court.setPlayer3Id(player3Id);
+                    court.setPlayer4Id(player4Id);
+                    court.setMatchStartedAt(LocalDateTime.now());
+                    court.setMatchEndedAt(null);
+                    courtService.updateCourt(court);
+                    log.info("已更新場地 {} 的球員信息: players=[{}, {}, {}, {}]", 
+                            courtId, player1Id, player2Id, player3Id, player4Id);
+                }
+            } catch (Exception e) {
+                log.error("更新場地球員信息失敗", e);
+                // 不影響主流程，只記錄錯誤
+            }
+            
             log.info("準備為場地 {} 分配球員: players=[{}, {}, {}, {}]", 
                     courtId, player1Id, player2Id, player3Id, player4Id);
             

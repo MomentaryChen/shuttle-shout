@@ -20,7 +20,6 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shuttleshout.common.model.dto.UserTeamDTO;
 import com.shuttleshout.common.model.po.Court;
-import com.shuttleshout.common.model.po.Match;
 import com.shuttleshout.handler.strategy.MessageStrategyFactory;
 import com.shuttleshout.handler.strategy.WebSocketMessageStrategy;
 import com.shuttleshout.service.CourtService;
@@ -286,33 +285,36 @@ public class TeamCallingWebSocketHandler extends TextWebSocketHandler {
             Map<Long, UserTeamDTO> memberMap = teamMembers.stream()
                     .collect(Collectors.toMap(UserTeamDTO::getUserId, member -> member));
             
-            // 構建每個場地的分配信息（每個場地只取最新的一筆進行中比賽）
+            // 構建每個場地的分配信息（從 court 表讀取球員信息）
             List<Map<String, Object>> courtsData = new ArrayList<>();
             int ongoingCount = 0;
             
             for (Court court : courts) {
-                // 獲取該場地最新的一筆進行中比賽
-                Match match = matchService.getOngoingMatchByCourtId(court.getId());
+                // 檢查場地上是否有球員（從 court 表讀取）
+                boolean hasPlayers = court.getPlayer1Id() != null || 
+                                     court.getPlayer2Id() != null || 
+                                     court.getPlayer3Id() != null || 
+                                     court.getPlayer4Id() != null;
                 
-                if (match != null) {
+                if (hasPlayers) {
                     ongoingCount++;
                     Map<String, Object> courtData = new HashMap<>();
                     courtData.put("courtId", court.getId());
                     
-                    // 構建該場地的球員分配列表
+                    // 構建該場地的球員分配列表（從 court 表讀取）
                     List<Map<String, Object>> assignments = new ArrayList<>();
                     
-                    if (match.getPlayer1Id() != null) {
-                        assignments.add(buildPlayerAssignment(match.getPlayer1Id(), 1, memberMap));
+                    if (court.getPlayer1Id() != null) {
+                        assignments.add(buildPlayerAssignment(court.getPlayer1Id(), 1, memberMap));
                     }
-                    if (match.getPlayer2Id() != null) {
-                        assignments.add(buildPlayerAssignment(match.getPlayer2Id(), 2, memberMap));
+                    if (court.getPlayer2Id() != null) {
+                        assignments.add(buildPlayerAssignment(court.getPlayer2Id(), 2, memberMap));
                     }
-                    if (match.getPlayer3Id() != null) {
-                        assignments.add(buildPlayerAssignment(match.getPlayer3Id(), 3, memberMap));
+                    if (court.getPlayer3Id() != null) {
+                        assignments.add(buildPlayerAssignment(court.getPlayer3Id(), 3, memberMap));
                     }
-                    if (match.getPlayer4Id() != null) {
-                        assignments.add(buildPlayerAssignment(match.getPlayer4Id(), 4, memberMap));
+                    if (court.getPlayer4Id() != null) {
+                        assignments.add(buildPlayerAssignment(court.getPlayer4Id(), 4, memberMap));
                     }
                     
                     courtData.put("assignments", assignments);
@@ -386,7 +388,7 @@ public class TeamCallingWebSocketHandler extends TextWebSocketHandler {
             // 獲取團隊的所有場地
             List<Court> courts = courtService.getCourtsByTeamId(teamId);
             
-            // 收集所有在場地上的球員ID（從 matches 表中獲取）
+            // 收集所有在場地上的球員ID（從 court 表中獲取）
             Set<Long> playersOnCourt = new HashSet<>();
             if (courts != null) {
                 for (Court court : courts) {
@@ -436,7 +438,7 @@ public class TeamCallingWebSocketHandler extends TextWebSocketHandler {
                     // 獲取團隊的所有場地
                     List<Court> courts = courtService.getCourtsByTeamId(teamId);
                     
-                    // 收集所有在場地上的球員ID（從 matches 表中獲取）
+                    // 收集所有在場地上的球員ID（從 court 表中獲取）
                     Set<Long> playersOnCourt = new HashSet<>();
                     if (courts != null) {
                         for (Court court : courts) {

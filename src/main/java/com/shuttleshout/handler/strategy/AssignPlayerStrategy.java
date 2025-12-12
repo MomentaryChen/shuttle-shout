@@ -1,7 +1,11 @@
 package com.shuttleshout.handler.strategy;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -61,10 +65,103 @@ public class AssignPlayerStrategy implements WebSocketMessageStrategy {
                 return;
             }
             
-            // 注意：球員信息現在只存儲在 matches 表中，不再存儲在 team_courts 表中
-            // 如果場地有正在進行的比賽，需要更新比賽記錄；否則需要創建新的比賽記錄
-            // 這裡暫時只記錄日誌，實際的分配應該通過創建或更新 Match 記錄來完成
-            log.info("分配球員 {} 到場地 {} 的位置 {}（球員信息存儲在 matches 表中）", userId, courtId, position);
+            // 驗證位置範圍
+            if (position < 1 || position > 4) {
+                log.warn("位置參數無效: position={}", position);
+                Map<String, Object> errorData = new HashMap<>();
+                errorData.put("message", "位置參數無效，必須在 1-4 之間");
+                handler.sendMessage(session, handler.createMessage("ERROR", errorData));
+                return;
+            }
+            
+            // 獲取 teamId（用於檢查所有場地）
+            Object teamIdObj = data.get("teamId");
+            Long teamId = teamIdObj != null ? handler.convertToLong(teamIdObj) : null;
+            
+            // 通過 team_courts 表檢查該球員是否已經在任何場地上（去重）
+            if (teamId != null) {
+                List<Court> courts = courtService.getCourtsByTeamId(teamId);
+                Set<Long> allPlayersOnCourt = new HashSet<>();
+                if (courts != null) {
+                    for (Court court : courts) {
+                        List<Long> players = courtService.getPlayersOnCourt(court.getId());
+                        for (Long playerId : players) {
+                            if (playerId != null) {
+                                allPlayersOnCourt.add(playerId);
+                            }
+                        }
+                    }
+                }
+                
+                // 檢查該球員是否已經在其他場地上
+                if (allPlayersOnCourt.contains(userId)) {
+                    log.warn("球員 {} 已經在其他場地上，無法重複分配", userId);
+                    Map<String, Object> errorData = new HashMap<>();
+                    errorData.put("message", "該球員已經在其他場地上，無法重複分配");
+                    handler.sendMessage(session, handler.createMessage("ERROR", errorData));
+                    return;
+                }
+            }
+            
+            // 獲取當前場地信息
+            Court court = courtService.getCourtById(courtId);
+            if (court == null) {
+                log.warn("場地不存在: courtId={}", courtId);
+                Map<String, Object> errorData = new HashMap<>();
+                errorData.put("message", "場地不存在");
+                handler.sendMessage(session, handler.createMessage("ERROR", errorData));
+                return;
+            }
+            
+            // 檢查該位置是否已被占用
+            Long existingPlayerId = null;
+            switch (position) {
+                case 1:
+                    existingPlayerId = court.getPlayer1Id();
+                    break;
+                case 2:
+                    existingPlayerId = court.getPlayer2Id();
+                    break;
+                case 3:
+                    existingPlayerId = court.getPlayer3Id();
+                    break;
+                case 4:
+                    existingPlayerId = court.getPlayer4Id();
+                    break;
+            }
+            
+            // 如果該位置已有其他球員，先清空（允許替換）
+            if (existingPlayerId != null && !existingPlayerId.equals(userId)) {
+                log.info("位置 {} 已有球員 {}，將被替換為 {}", position, existingPlayerId, userId);
+            }
+            
+            // 更新 court 表的球員信息
+            switch (position) {
+                case 1:
+                    court.setPlayer1Id(userId);
+                    break;
+                case 2:
+                    court.setPlayer2Id(userId);
+                    break;
+                case 3:
+                    court.setPlayer3Id(userId);
+                    break;
+                case 4:
+                    court.setPlayer4Id(userId);
+                    break;
+            }
+            
+            // 如果這是第一個球員，設置比賽開始時間
+            if (court.getMatchStartedAt() == null && 
+                (court.getPlayer1Id() != null || court.getPlayer2Id() != null || 
+                 court.getPlayer3Id() != null || court.getPlayer4Id() != null)) {
+                court.setMatchStartedAt(LocalDateTime.now());
+            }
+            
+            court.setUpdatedAt(LocalDateTime.now());
+            courtService.updateCourt(court);
+            
+            log.info("已分配球員 {} 到場地 {} 的位置 {}（已更新 team_courts 表）", userId, courtId, position);
             
             // 構建響應消息
             Map<String, Object> response = new HashMap<>();
@@ -78,12 +175,8 @@ public class AssignPlayerStrategy implements WebSocketMessageStrategy {
             handler.broadcastMessage(response);
             
             // 更新等待隊列（從團隊成員中排除所有場地上的球員）
-            Object teamIdObj = data.get("teamId");
-            if (teamIdObj != null) {
-                Long teamId = handler.convertToLong(teamIdObj);
-                if (teamId != null) {
-                    handler.sendWaitingQueueUpdate(null, teamId, null); // null表示廣播，第三個參數為null表示自動計算
-                }
+            if (teamId != null) {
+                handler.sendWaitingQueueUpdate(null, teamId, null); // null表示廣播，第三個參數為null表示自動計算
             }
             
         } catch (Exception e) {

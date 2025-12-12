@@ -15,12 +15,10 @@ import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.shuttleshout.common.exception.ApiException;
 import com.shuttleshout.common.exception.ErrorCode;
 import com.shuttleshout.common.model.po.Court;
-import com.shuttleshout.common.model.po.Match;
 import com.shuttleshout.common.model.po.TeamPO;
 import com.shuttleshout.repository.CourtRepository;
 import com.shuttleshout.repository.TeamRepository;
 import com.shuttleshout.service.CourtService;
-import com.shuttleshout.service.MatchService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 public class CourtServiceImpl extends ServiceImpl<CourtRepository, Court> implements CourtService {
 
     private final TeamRepository teamRepository;
-    private final MatchService matchService;
 
     @Override
     public List<Court> getCourtsByTeamId(Long teamId) {
@@ -113,16 +110,39 @@ public class CourtServiceImpl extends ServiceImpl<CourtRepository, Court> implem
     }
 
     @Override
+    @Transactional
+    public Court updateCourt(Court court) {
+        if (court.getUpdatedAt() == null) {
+            court.setUpdatedAt(LocalDateTime.now());
+        }
+        getMapper().update(court);
+        return court;
+    }
+    
+    /**
+     * 清空場地的球員信息和比賽時間
+     * 使用 SQL 直接更新，確保 null 值被正確更新到數據庫
+     * 
+     * @param courtId 場地ID
+     */
+    @Transactional
+    public void clearCourtPlayers(Long courtId) {
+        LocalDateTime now = LocalDateTime.now();
+        getMapper().clearCourtPlayers(courtId, now, now);
+        log.info("已使用 SQL 清空場地 {} 的球員信息和比賽時間", courtId);
+    }
+
+    @Override
     public List<Long> getPlayersOnCourt(Long courtId) {
-        // 從 matches 表中獲取該場地正在進行的比賽的球員
-        Match match = matchService.getOngoingMatchByCourtId(courtId);
+        // 從 court 表中獲取該場地的球員
+        Court court = getCourtById(courtId);
         List<Long> players = new ArrayList<>();
         
-        if (match != null) {
-            players.add(match.getPlayer1Id());
-            players.add(match.getPlayer2Id());
-            players.add(match.getPlayer3Id());
-            players.add(match.getPlayer4Id());
+        if (court != null) {
+            players.add(court.getPlayer1Id());
+            players.add(court.getPlayer2Id());
+            players.add(court.getPlayer3Id());
+            players.add(court.getPlayer4Id());
         }
         
         return players;

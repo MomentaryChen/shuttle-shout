@@ -118,13 +118,27 @@ CREATE TABLE `team_courts` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '場地ID',
   `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '場地名稱',
   `team_id` bigint(20) NOT NULL COMMENT '所屬球隊ID',
+  `player1_id` bigint(20) DEFAULT NULL COMMENT '球員1用戶ID',
+  `player2_id` bigint(20) DEFAULT NULL COMMENT '球員2用戶ID',
+  `player3_id` bigint(20) DEFAULT NULL COMMENT '球員3用戶ID',
+  `player4_id` bigint(20) DEFAULT NULL COMMENT '球員4用戶ID',
+  `match_started_at` datetime DEFAULT NULL COMMENT '比賽開始時間',
+  `match_ended_at` datetime DEFAULT NULL COMMENT '比賽結束時間',
   `is_active` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否啟用',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '建立時間',
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新時間',
   PRIMARY KEY (`id`),
   KEY `idx_team_court_team` (`team_id`),
   KEY `idx_team_court_active` (`is_active`),
-  CONSTRAINT `fk_team_courts_team` FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY `idx_team_court_player1` (`player1_id`),
+  KEY `idx_team_court_player2` (`player2_id`),
+  KEY `idx_team_court_player3` (`player3_id`),
+  KEY `idx_team_court_player4` (`player4_id`),
+  CONSTRAINT `fk_team_courts_team` FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_team_courts_player1` FOREIGN KEY (`player1_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_team_courts_player2` FOREIGN KEY (`player2_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_team_courts_player3` FOREIGN KEY (`player3_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_team_courts_player4` FOREIGN KEY (`player4_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='球隊場地表';
 
 -- ============================================
@@ -187,7 +201,7 @@ CREATE TABLE `matches` (
   `player2_id` bigint(20) DEFAULT NULL COMMENT '球員2用戶ID',
   `player3_id` bigint(20) DEFAULT NULL COMMENT '球員3用戶ID',
   `player4_id` bigint(20) DEFAULT NULL COMMENT '球員4用戶ID',
-  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ONGOING' COMMENT '比賽狀態：ONGOING(進行中), FINISHED(已完成), CANCELLED(已取消)',
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ONGOING' COMMENT '比賽狀態：PENDING_CONFIRMATION(等待確認), ONGOING(進行中), FINISHED(已完成), CANCELLED(已取消)',
   `started_at` datetime NOT NULL COMMENT '比賽開始時間',
   `ended_at` datetime DEFAULT NULL COMMENT '比賽結束時間',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '建立時間',

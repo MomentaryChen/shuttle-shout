@@ -57,6 +57,31 @@ public class MatchServiceImpl extends ServiceImpl<MatchRepository, Match> implem
     }
 
     @Override
+    @Transactional
+    public Match createPendingMatch(Long teamId, Long courtId, Long player1Id, Long player2Id, Long player3Id, Long player4Id) {
+        LocalDateTime now = LocalDateTime.now();
+        
+        Match match = Match.builder()
+                .teamId(teamId)
+                .courtId(courtId)
+                .player1Id(player1Id)
+                .player2Id(player2Id)
+                .player3Id(player3Id)
+                .player4Id(player4Id)
+                .status(Match.MatchStatus.PENDING_CONFIRMATION)
+                .startedAt(now)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+        
+        getMapper().insert(match);
+        log.info("創建等待確認的比賽記錄: matchId={}, teamId={}, courtId={}, players=[{}, {}, {}, {}]", 
+                match.getId(), teamId, courtId, player1Id, player2Id, player3Id, player4Id);
+        
+        return match;
+    }
+
+    @Override
     public Match getMatchById(Long id) {
         Match match = getMapper().selectOneById(id);
         if (match == null) {
@@ -69,7 +94,9 @@ public class MatchServiceImpl extends ServiceImpl<MatchRepository, Match> implem
     public Match getOngoingMatchByCourtId(Long courtId) {
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .where(MATCH.COURT_ID.eq(courtId))
-                .and(MATCH.STATUS.eq(Match.MatchStatus.ONGOING.name()))
+                .and(MATCH.STATUS.in(
+                        Match.MatchStatus.PENDING_CONFIRMATION.name(),
+                        Match.MatchStatus.ONGOING.name()))
                 .orderBy(MATCH.STARTED_AT.desc())
                 .limit(1);
         return getMapper().selectOneByQuery(queryWrapper);
@@ -87,7 +114,9 @@ public class MatchServiceImpl extends ServiceImpl<MatchRepository, Match> implem
     public List<Match> getOngoingMatchesByTeamId(Long teamId) {
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .where(MATCH.TEAM_ID.eq(teamId))
-                .and(MATCH.STATUS.eq(Match.MatchStatus.ONGOING.name()))
+                .and(MATCH.STATUS.in(
+                        Match.MatchStatus.PENDING_CONFIRMATION.name(),
+                        Match.MatchStatus.ONGOING.name()))
                 .orderBy(MATCH.STARTED_AT.desc());
         return getMapper().selectListByQuery(queryWrapper);
     }
@@ -113,6 +142,22 @@ public class MatchServiceImpl extends ServiceImpl<MatchRepository, Match> implem
         match.setUpdatedAt(LocalDateTime.now());
         getMapper().update(match);
         log.info("比賽已取消: matchId={}", matchId);
+        return match;
+    }
+
+    @Override
+    @Transactional
+    public Match confirmMatch(Long matchId) {
+        Match match = getMatchById(matchId);
+        if (match.getStatus() != Match.MatchStatus.PENDING_CONFIRMATION) {
+            throw new ApiException(ErrorCode.ILLEGAL_STATE, 
+                    "只有等待確認狀態的比賽才能被確認，當前狀態: " + match.getStatus());
+        }
+        match.setStatus(Match.MatchStatus.ONGOING);
+        match.setStartedAt(LocalDateTime.now());
+        match.setUpdatedAt(LocalDateTime.now());
+        getMapper().update(match);
+        log.info("比賽已確認: matchId={}", matchId);
         return match;
     }
 }

@@ -25,6 +25,19 @@ public interface MatchService {
     Match createMatch(Long teamId, Long courtId, Long player1Id, Long player2Id, Long player3Id, Long player4Id);
 
     /**
+     * 創建等待確認狀態的比賽記錄
+     * 
+     * @param teamId 球隊ID
+     * @param courtId 場地ID
+     * @param player1Id 球員1的用戶ID
+     * @param player2Id 球員2的用戶ID
+     * @param player3Id 球員3的用戶ID
+     * @param player4Id 球員4的用戶ID
+     * @return 創建後的比賽記錄（狀態為等待確認）
+     */
+    Match createPendingMatch(Long teamId, Long courtId, Long player1Id, Long player2Id, Long player3Id, Long player4Id);
+
+    /**
      * 根據ID獲取比賽
      * 
      * @param id 比賽ID
@@ -71,5 +84,13 @@ public interface MatchService {
      * @return 更新後的比賽記錄
      */
     Match cancelMatch(Long matchId);
+
+    /**
+     * 確認比賽（將狀態從等待確認改為進行中）
+     * 
+     * @param matchId 比賽ID
+     * @return 更新後的比賽記錄
+     */
+    Match confirmMatch(Long matchId);
 }
 

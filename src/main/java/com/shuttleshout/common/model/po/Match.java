@@ -85,9 +85,10 @@ public class Match {
      * 比賽狀態枚舉
      */
     public enum MatchStatus {
-        ONGOING,    // 進行中
-        FINISHED,   // 已完成
-        CANCELLED   // 已取消
+        PENDING_CONFIRMATION,  // 等待確認
+        ONGOING,                // 進行中
+        FINISHED,               // 已完成
+        CANCELLED               // 已取消
     }
 }
 
