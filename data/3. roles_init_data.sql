@@ -1,15 +1,15 @@
 -- ============================================
--- ShuttleShout 角色相关初始化数据
--- 导出时间: 2024
--- 数据库名: shuttleshout
+-- ShuttleShout 角色相關初始化資料
+-- 匯出時間: 2024
+-- 資料庫名: shuttleshout
 -- ============================================
 
--- 设置字符集
+-- 設定字元集
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ============================================
--- 初始化数据: roles - 角色表
+-- 初始化資料: roles - 角色表
 -- ============================================
 DELETE FROM `roles`;
 INSERT INTO `roles` (`id`, `name`, `code`, `description`, `is_active`, `created_at`, `updated_at`) VALUES
@@ -18,6 +18,6 @@ INSERT INTO `roles` (`id`, `name`, `code`, `description`, `is_active`, `created_
 (3, '團隊經理', 'TEAM_MANAGER', '團隊經理，管理團隊日常事務', 1, '2025-12-10 05:58:50', '2025-12-10 05:58:50'),
 (4, '球員', 'PLAYER', '球員，普通用戶角色', 1, '2025-12-10 05:59:03', '2025-12-10 05:59:03');
 
--- 恢复外键检查
+-- 恢復外鍵檢查
 SET FOREIGN_KEY_CHECKS = 1;
 
