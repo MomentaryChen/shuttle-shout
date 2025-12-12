@@ -70,7 +70,7 @@ export default function Page() {
 
         {/* Main Content */}
         <main className="flex-1">
-          <div className="container mx-auto px-6 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="container mx-auto px-6 py-8">
             {!isAuthenticated && (
               <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-950/20 dark:to-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <div className="flex items-center justify-between">
