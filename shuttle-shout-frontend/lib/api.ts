@@ -2,7 +2,7 @@
  * API服務 - 與後端API通信
  */
 
-import { PlayerDto, CourtDto, QueueDto, QueueStatus, TeamDto, LoginRequest, LoginResponse, UserDto, ResourcePageDto, UserTeamDto } from "@/types/api"
+import { PlayerDto, CourtDto, QueueDto, QueueStatus, TeamDto, TeamOverviewStatsDto, LoginRequest, LoginResponse, UserDto, ResourcePageDto, UserTeamDto } from "@/types/api"
 
 // 獲取存儲的token（已經在上面定義）
 // getStoredToken, setStoredToken, clearStoredToken 函數已經在上面定義
@@ -284,6 +284,13 @@ export const teamApi = {
     return apiRequest<void>(`/teams/${id}`, {
       method: "DELETE",
     })
+  },
+
+  /**
+   * 獲取團隊總覽統計數據（總人數和使用場地）
+   */
+  getOverviewStats: async (): Promise<TeamOverviewStatsDto> => {
+    return apiRequestWithoutAuth<TeamOverviewStatsDto>("/teams/overview/stats")
   },
 }
 

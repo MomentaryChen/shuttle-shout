@@ -1,11 +1,14 @@
 package com.shuttleshout.service.impl;
 
+import static com.shuttleshout.common.model.po.table.CourtTableDef.COURT;
 import static com.shuttleshout.common.model.po.table.TeamPOTableDef.TEAM_PO;
 import static com.shuttleshout.common.model.po.table.UserTeamPOTableDef.USER_TEAM_PO;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -21,10 +24,13 @@ import com.shuttleshout.common.exception.ApiException;
 import com.shuttleshout.common.exception.ErrorCode;
 import com.shuttleshout.common.model.dto.TeamCreateDTO;
 import com.shuttleshout.common.model.dto.TeamDTO;
+import com.shuttleshout.common.model.dto.TeamOverviewStatsDTO;
 import com.shuttleshout.common.model.dto.TeamUpdateDTO;
+import com.shuttleshout.common.model.po.Court;
 import com.shuttleshout.common.model.po.TeamPO;
 import com.shuttleshout.common.model.po.UserPO;
 import com.shuttleshout.common.model.po.UserTeamPO;
+import com.shuttleshout.repository.CourtRepository;
 import com.shuttleshout.repository.TeamRepository;
 import com.shuttleshout.repository.UserRepository;
 import com.shuttleshout.repository.UserTeamRepository;
@@ -45,6 +51,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamRepository, TeamPO> impleme
     private final UserRepository userRepository;
 
     private final UserTeamRepository userTeamRepository;
+
+    private final CourtRepository courtRepository;
 
     /**
      * 獲取所有球隊
@@ -250,6 +258,54 @@ public class TeamServiceImpl extends ServiceImpl<TeamRepository, TeamPO> impleme
             return new ArrayList<>();
         }
         return userTeams.stream().map(UserTeamPO::getUserId).collect(Collectors.toList());
+    }
+
+    /**
+     * 獲取團隊總覽統計數據（總人數和使用場地）
+     */
+    @Override
+    public TeamOverviewStatsDTO getTeamOverviewStats() {
+        // 獲取所有活躍團隊的ID列表
+        QueryWrapper activeTeamsQuery = QueryWrapper.create()
+                .where(TEAM_PO.IS_ACTIVE.eq(true));
+        List<TeamPO> activeTeams = getMapper().selectListByQuery(activeTeamsQuery);
+        
+        if (activeTeams == null || activeTeams.isEmpty()) {
+            return TeamOverviewStatsDTO.builder()
+                    .totalPlayers(0)
+                    .totalCourts(0)
+                    .activeTeams(0)
+                    .build();
+        }
+
+        List<Long> activeTeamIds = activeTeams.stream()
+                .map(TeamPO::getId)
+                .collect(Collectors.toList());
+
+        // 統計總人數：查詢所有活躍團隊的成員總數（去重，避免同一用戶加入多個團隊被重複計算）
+        QueryWrapper userTeamQuery = QueryWrapper.create()
+                .where(USER_TEAM_PO.TEAM_ID.in(activeTeamIds));
+        List<UserTeamPO> userTeams = userTeamRepository.selectListByQuery(userTeamQuery);
+        // 使用 Set 去重，統計不重複的用戶ID數量
+        Set<Long> uniqueUserIds = new HashSet<>();
+        if (userTeams != null) {
+            for (UserTeamPO userTeam : userTeams) {
+                uniqueUserIds.add(userTeam.getUserId());
+            }
+        }
+        int totalPlayers = uniqueUserIds.size();
+
+        // 統計使用場地：查詢所有活躍團隊的場地總數
+        QueryWrapper courtQuery = QueryWrapper.create()
+                .where(COURT.TEAM_ID.in(activeTeamIds));
+        List<Court> courts = courtRepository.selectListByQuery(courtQuery);
+        int totalCourts = courts != null ? courts.size() : 0;
+
+        return TeamOverviewStatsDTO.builder()
+                .totalPlayers(totalPlayers)
+                .totalCourts(totalCourts)
+                .activeTeams(activeTeams.size())
+                .build();
     }
 
     /**

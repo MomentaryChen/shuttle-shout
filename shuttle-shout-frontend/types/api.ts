@@ -66,6 +66,15 @@ export interface TeamDto {
   playerIds?: number[] // 球员ID列表
 }
 
+/**
+ * 團隊總覽統計數據
+ */
+export interface TeamOverviewStatsDto {
+  totalPlayers: number // 總人數（所有活躍團隊的成員總數）
+  totalCourts: number // 使用場地（所有活躍團隊使用的場地總數）
+  activeTeams: number // 活躍團隊數量
+}
+
 export interface Team {
   id: string
   name: string
