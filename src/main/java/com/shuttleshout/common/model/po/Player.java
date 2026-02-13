@@ -11,6 +11,7 @@ import com.mybatisflex.annotation.RelationManyToOne;
 import com.mybatisflex.annotation.Table;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -21,6 +22,7 @@ import lombok.NoArgsConstructor;
  */
 @Table(value = "players")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Player {

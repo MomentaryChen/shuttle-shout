@@ -6,6 +6,7 @@ import javax.validation.Valid;
 
 import com.shuttleshout.common.model.dto.TeamCreateDTO;
 import com.shuttleshout.common.model.dto.TeamDTO;
+import com.shuttleshout.common.model.dto.TeamOverviewStatsDTO;
 import com.shuttleshout.common.model.dto.TeamUpdateDTO;
 
 /**
@@ -54,5 +55,10 @@ public interface TeamService {
      * 刪除球隊
      */
     void deleteTeam(Long id);
+
+    /**
+     * 獲取團隊總覽統計數據（總人數和使用場地）
+     */
+    TeamOverviewStatsDTO getTeamOverviewStats();
 }
 

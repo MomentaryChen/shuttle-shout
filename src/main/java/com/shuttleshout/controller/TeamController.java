@@ -20,6 +20,7 @@ import com.shuttleshout.common.annotation.CurrentUserId;
 import com.shuttleshout.common.exception.ApiException;
 import com.shuttleshout.common.model.dto.TeamCreateDTO;
 import com.shuttleshout.common.model.dto.TeamDTO;
+import com.shuttleshout.common.model.dto.TeamOverviewStatsDTO;
 import com.shuttleshout.common.model.dto.TeamUpdateDTO;
 import com.shuttleshout.service.TeamService;
 
@@ -134,6 +135,20 @@ public class TeamController {
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             throw new ApiException("刪除球隊失敗: " + e.getMessage(), HttpStatus.BAD_REQUEST, "DELETE_TEAM_ERROR", e);
+        }
+    }
+
+    /**
+     * 獲取團隊總覽統計數據（總人數和使用場地）
+     */
+    @GetMapping("/overview/stats")
+    @Operation(summary = "獲取團隊總覽統計數據", description = "返回所有活躍團隊的總人數和使用場地統計")
+    public ResponseEntity<TeamOverviewStatsDTO> getTeamOverviewStats() {
+        try {
+            TeamOverviewStatsDTO stats = teamService.getTeamOverviewStats();
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            throw new ApiException("獲取團隊總覽統計數據失敗: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR, "GET_TEAM_OVERVIEW_STATS_ERROR", e);
         }
     }
 }

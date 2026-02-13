@@ -398,7 +398,7 @@ export function TeamManagement() {
             <MapPin className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             <div>
               <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.totalCourts}</p>
-              <p className="text-sm text-purple-700 dark:text-purple-300">使用場地</p>
+              <p className="text-sm text-purple-700 dark:text-purple-300">場地使用中</p>
             </div>
           </div>
         </div>

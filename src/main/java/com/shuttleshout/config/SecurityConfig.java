@@ -103,6 +103,7 @@ public class SecurityConfig {
                 .antMatchers("/health/**").permitAll()
                 .antMatchers("/auth/login", "/auth/register").permitAll()
                 .antMatchers(HttpMethod.GET, "/teams").permitAll()
+                .antMatchers(HttpMethod.GET, "/teams/overview/stats").permitAll()
                 .antMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
                 .antMatchers("/error").permitAll()
                 // WebSocket端點允許訪問

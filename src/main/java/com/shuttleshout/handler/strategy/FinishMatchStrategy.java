@@ -7,11 +7,18 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketSession;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.shuttleshout.common.model.po.Court;
 import com.shuttleshout.common.model.po.Match;
+import com.shuttleshout.common.model.po.Player;
+import com.shuttleshout.common.model.po.Queue;
 import com.shuttleshout.handler.TeamCallingWebSocketHandler;
 import com.shuttleshout.service.CourtService;
 import com.shuttleshout.service.MatchService;
+import com.shuttleshout.service.PlayerService;
+import com.shuttleshout.service.QueueService;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -33,6 +40,12 @@ public class FinishMatchStrategy implements WebSocketMessageStrategy {
     
     @Autowired
     private CourtService courtService;
+    
+    @Autowired
+    private PlayerService playerService;
+    
+    @Autowired
+    private QueueService queueService;
     
     @Override
     public void handle(WebSocketSession session, Map<String, Object> data) {
@@ -92,7 +105,31 @@ public class FinishMatchStrategy implements WebSocketMessageStrategy {
                 log.info("比賽已結束: matchId={}, courtId={}", match.getId(), courtId);
             }
             
-            // 清空 court 表（team_courts）上的球員信息和比賽時間
+            // 從 court 或 match 對象中獲取 teamId（在清空前獲取，確保能正確處理下場球員）
+            Long teamId = court.getTeamId();
+            if (teamId == null && match != null) {
+                teamId = match.getTeamId();
+            }
+            // 如果還是沒有 teamId，嘗試從請求參數中獲取
+            if (teamId == null && teamIdObj != null) {
+                teamId = handler.convertToLong(teamIdObj);
+            }
+            
+            // 在清空場地前，保存下場球員的userId列表（用於重新加入等待隊列）
+            List<Long> finishedPlayerUserIds = new ArrayList<>();
+            if (court.getPlayer1Id() != null) {
+                finishedPlayerUserIds.add(court.getPlayer1Id());
+            }
+            if (court.getPlayer2Id() != null) {
+                finishedPlayerUserIds.add(court.getPlayer2Id());
+            }
+            if (court.getPlayer3Id() != null) {
+                finishedPlayerUserIds.add(court.getPlayer3Id());
+            }
+            if (court.getPlayer4Id() != null) {
+                finishedPlayerUserIds.add(court.getPlayer4Id());
+            }
+            
             log.info("準備清空場地 {} 的球員信息: players=[{}, {}, {}, {}]", 
                     courtId, court.getPlayer1Id(), court.getPlayer2Id(), 
                     court.getPlayer3Id(), court.getPlayer4Id());
@@ -111,14 +148,32 @@ public class FinishMatchStrategy implements WebSocketMessageStrategy {
                 log.info("已成功清空場地 {} 的球員信息和比賽時間（team_courts 表已更新）", courtId);
             }
             
-            // 從 court 或 match 對象中獲取 teamId（優先使用，確保能正確更新隊列）
-            Long teamId = court.getTeamId();
-            if (teamId == null && match != null) {
-                teamId = match.getTeamId();
-            }
-            // 如果還是沒有 teamId，嘗試從請求參數中獲取
-            if (teamId == null && teamIdObj != null) {
-                teamId = handler.convertToLong(teamIdObj);
+            // 為下場的球員重新加入等待隊列
+            int reQueuedCount = 0;
+            if (teamId != null && !finishedPlayerUserIds.isEmpty()) {
+                for (Long userId : finishedPlayerUserIds) {
+                    try {
+                        // 創建或獲取Player記錄（從用戶信息創建）
+                        Player player = playerService.createPlayerFromUser(userId, teamId);
+                        
+                        // 為該Player創建WAITING狀態的Queue記錄
+                        Queue queue = queueService.createQueue(player.getId(), null, Queue.QueueStatus.WAITING);
+                        reQueuedCount++;
+                        log.info("已將下場球員重新加入等待隊列: userId={}, playerId={}, queueId={}", 
+                                userId, player.getId(), queue.getId());
+                    } catch (Exception e) {
+                        log.error("為下場球員 {} 重新加入等待隊列失敗", userId, e);
+                        // 繼續處理其他球員，不影響整體流程
+                    }
+                }
+                log.info("已為 {} 位下場球員重新加入等待隊列（共 {} 位）", reQueuedCount, finishedPlayerUserIds.size());
+            } else {
+                if (teamId == null) {
+                    log.warn("無法將下場球員重新加入等待隊列：無法獲取 teamId");
+                }
+                if (finishedPlayerUserIds.isEmpty()) {
+                    log.info("沒有下場球員需要重新加入等待隊列");
+                }
             }
             
             // 構建響應消息
@@ -126,7 +181,8 @@ public class FinishMatchStrategy implements WebSocketMessageStrategy {
             response.put("type", "MATCH_FINISHED");
             response.put("courtId", courtId);
             response.put("teamId", teamId != null ? teamId : teamIdObj);
-            response.put("message", "比賽已結束，場地已清空");
+            response.put("reQueuedCount", reQueuedCount);
+            response.put("message", String.format("比賽已結束，場地已清空，已將 %d 位球員重新加入等待隊列", reQueuedCount));
             
             // 廣播給所有客戶端
             handler.broadcastMessage(response);

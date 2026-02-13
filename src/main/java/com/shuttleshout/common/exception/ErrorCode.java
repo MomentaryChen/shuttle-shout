@@ -59,6 +59,16 @@ public enum ErrorCode {
     GET_COURTS_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "獲取場地列表失敗"),
     CREATE_COURT_ERROR(HttpStatus.BAD_REQUEST, "創建場地失敗"),
     
+    // 球員相關錯誤
+    PLAYER_NOT_FOUND(HttpStatus.NOT_FOUND, "球員不存在"),
+    GET_PLAYERS_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "獲取球員列表失敗"),
+    CREATE_PLAYER_ERROR(HttpStatus.BAD_REQUEST, "創建球員失敗"),
+    
+    // 隊列相關錯誤
+    QUEUE_NOT_FOUND(HttpStatus.NOT_FOUND, "隊列不存在"),
+    GET_QUEUES_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "獲取隊列列表失敗"),
+    CREATE_QUEUE_ERROR(HttpStatus.BAD_REQUEST, "創建隊列失敗"),
+    
     // 用戶團隊關係相關錯誤
     USER_ALREADY_IN_TEAM(HttpStatus.BAD_REQUEST, "用戶已經在團隊中"),
     USER_NOT_IN_TEAM(HttpStatus.BAD_REQUEST, "用戶不在團隊中"),

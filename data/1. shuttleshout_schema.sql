@@ -223,6 +223,47 @@ CREATE TABLE `matches` (
   CONSTRAINT `fk_matches_player4` FOREIGN KEY (`player4_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='比賽表';
 
+-- ============================================
+-- 表結構: players - 球員表
+-- ============================================
+DROP TABLE IF EXISTS `players`;
+CREATE TABLE `players` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '球員ID',
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '球員姓名',
+  `phone_number` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '電話號碼',
+  `notes` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '備註',
+  `team_id` bigint(20) NOT NULL COMMENT '所屬球隊ID',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '建立時間',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新時間',
+  PRIMARY KEY (`id`),
+  KEY `idx_player_team` (`team_id`),
+  KEY `idx_player_name` (`name`),
+  CONSTRAINT `fk_players_team` FOREIGN KEY (`team_id`) REFERENCES `teams` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='球員表';
+
+-- ============================================
+-- 表結構: queues - 叫號隊列表
+-- ============================================
+DROP TABLE IF EXISTS `queues`;
+CREATE TABLE `queues` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '隊列ID',
+  `player_id` bigint(20) NOT NULL COMMENT '球員ID',
+  `court_id` bigint(20) DEFAULT NULL COMMENT '場地ID',
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'WAITING' COMMENT '隊列狀態：WAITING(等待中), CALLED(已叫號), SERVED(已服務), CANCELLED(已取消)',
+  `queue_number` int(11) DEFAULT NULL COMMENT '排隊號碼',
+  `called_at` datetime DEFAULT NULL COMMENT '叫號時間',
+  `served_at` datetime DEFAULT NULL COMMENT '服務時間（上場時間）',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '建立時間',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新時間',
+  PRIMARY KEY (`id`),
+  KEY `idx_queue_player` (`player_id`),
+  KEY `idx_queue_court` (`court_id`),
+  KEY `idx_queue_status` (`status`),
+  KEY `idx_queue_number` (`queue_number`),
+  CONSTRAINT `fk_queues_player` FOREIGN KEY (`player_id`) REFERENCES `players` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_queues_court` FOREIGN KEY (`court_id`) REFERENCES `team_courts` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='叫號隊列表';
+
 -- 恢復外鍵檢查
 SET FOREIGN_KEY_CHECKS = 1;
 

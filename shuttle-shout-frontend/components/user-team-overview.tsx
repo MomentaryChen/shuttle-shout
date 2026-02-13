@@ -14,7 +14,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { RegisterForm } from "@/components/register-form"
 import { useAuth } from "@/contexts/AuthContext"
 import { teamApi, userTeamApi, userApi } from "@/lib/api"
-import { TeamDto, UserDto } from "@/types/api"
+import { TeamDto, UserDto, TeamOverviewStatsDto } from "@/types/api"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Spinner } from "@/components/ui/spinner"
 import { toast } from "sonner"
@@ -62,8 +62,17 @@ export function UserTeamOverview() {
   const [membersLoading, setMembersLoading] = useState(false)
   const [membersDialogOpen, setMembersDialogOpen] = useState(false)
 
+  // 統計數據狀態
+  const [stats, setStats] = useState<TeamOverviewStatsDto>({
+    totalPlayers: 0,
+    totalCourts: 0,
+    activeTeams: 0,
+  })
+  const [statsLoading, setStatsLoading] = useState(false)
+
   useEffect(() => {
     loadTeams()
+    loadStats()
     if (isAuthenticated && user?.id) {
       loadUserJoinedTeams()
     }
@@ -105,6 +114,25 @@ export function UserTeamOverview() {
     }
   }
 
+  // 加载统计数据
+  const loadStats = async () => {
+    try {
+      setStatsLoading(true)
+      const statsData = await teamApi.getOverviewStats()
+      setStats(statsData)
+    } catch (error) {
+      console.error("加載統計數據失敗:", error)
+      // 如果API失败，使用默认值，不显示错误提示
+      setStats({
+        totalPlayers: 0,
+        totalCourts: 0,
+        activeTeams: 0,
+      })
+    } finally {
+      setStatsLoading(false)
+    }
+  }
+
   // 搜尋和過濾邏輯
   const filteredTeams = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -127,17 +155,9 @@ export function UserTeamOverview() {
     })
   }, [teams, searchQuery, searchField])
 
-  // 計算簡單統計數據（基於過濾後的結果）
-  const stats = useMemo(() => {
-    const activeTeams = filteredTeams.filter(t => t.isActive !== false).length
-    const totalPlayers = filteredTeams.reduce((sum, t) => sum + (t.currentPlayerCount || 0), 0)
-    const totalCourts = filteredTeams.reduce((sum, t) => sum + (t.currentCourtCount || 0), 0)
-
-    return {
-      activeTeams,
-      totalPlayers,
-      totalCourts,
-    }
+  // 計算過濾後的活躍團隊數量（用於顯示搜索結果）
+  const filteredActiveTeams = useMemo(() => {
+    return filteredTeams.filter(t => t.isActive !== false).length
   }, [filteredTeams])
 
   // 加入團隊
@@ -155,8 +175,8 @@ export function UserTeamOverview() {
       toast.success("成功加入團隊！")
       // 更新已加入团队列表
       setJoinedTeamIds(prev => new Set([...prev, teamId]))
-      // 重新加载团队列表以更新数据
-      await loadTeams()
+      // 重新加载团队列表和统计数据以更新数据
+      await Promise.all([loadTeams(), loadStats()])
     } catch (error: any) {
       console.error("加入團隊失敗:", error)
       // 如果错误是"用户已经在团队中"，更新已加入列表
@@ -203,8 +223,8 @@ export function UserTeamOverview() {
         newSet.delete(teamToLeave.id)
         return newSet
       })
-      // 重新加载团队列表以更新数据
-      await loadTeams()
+      // 重新加载团队列表和统计数据以更新数据
+      await Promise.all([loadTeams(), loadStats()])
       setLeaveDialogOpen(false)
       setTeamToLeave(null)
     } catch (error: any) {
@@ -281,7 +301,9 @@ export function UserTeamOverview() {
           <div className="flex items-center gap-3">
             <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <div>
-              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.activeTeams}</p>
+              <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                {statsLoading ? "-" : stats.activeTeams}
+              </p>
               <p className="text-sm text-blue-700 dark:text-blue-300">活躍團隊</p>
             </div>
           </div>
@@ -291,7 +313,9 @@ export function UserTeamOverview() {
           <div className="flex items-center gap-3">
             <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
             <div>
-              <p className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.totalPlayers}</p>
+              <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+                {statsLoading ? "-" : stats.totalPlayers}
+              </p>
               <p className="text-sm text-green-700 dark:text-green-300">總人數</p>
             </div>
           </div>
@@ -301,7 +325,9 @@ export function UserTeamOverview() {
           <div className="flex items-center gap-3">
             <MapPin className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             <div>
-              <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.totalCourts}</p>
+              <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                {statsLoading ? "-" : stats.totalCourts}
+              </p>
               <p className="text-sm text-purple-700 dark:text-purple-300">使用場地</p>
             </div>
           </div>
@@ -522,21 +548,24 @@ export function UserTeamOverview() {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => router.push(`/team-calling?teamId=${team.id}`)}
-                                  className="h-8 w-8 rounded-full hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
-                                >
-                                  <PlayCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent side="top">
-                                <p className="text-xs">進入叫號系統</p>
-                              </TooltipContent>
-                            </Tooltip>
+                            {/* 叫號系統按鈕 - 僅在已登錄且為團隊所有者時顯示 */}
+                            {isAuthenticated && user?.id && team.userId === user.id && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => router.push(`/team-calling?teamId=${team.id}`)}
+                                    className="h-8 w-8 rounded-full hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
+                                  >
+                                    <PlayCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <p className="text-xs">進入叫號系統</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button

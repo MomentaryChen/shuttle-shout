@@ -1,0 +1,13 @@
+---
+description: React 前端盡量建立可重複利用的 component
+globs: "**/*.tsx,**/*.jsx"
+alwaysApply: false
+---
+
+# React 可重複利用元件規則
+
+- **優先建立可重複利用的 component**：相同 UI 或邏輯出現兩次以上時，抽成獨立元件，放在 `components/` 或依功能分子目錄。
+- **單一職責**：每個元件只負責一類呈現或行為，方便在不同頁面與情境複用。
+- **透過 props 客製**：用 `children`、`className`、回呼（如 `onClick`、`onChange`）與資料 props 讓元件可配置，避免寫死樣式或行為。
+- **命名**：元件檔名與元件名稱一致，使用 PascalCase（例如 `Button.tsx`、`UserCard.tsx`）。
+- **共用 UI**：按鈕、輸入框、卡片、列表項、模態框等通用 UI 一律做成共用元件，再在頁面中組合使用。

@@ -1,0 +1,13 @@
+---
+description: MySQL 與資料庫使用規範
+globs: "**/*.sql,**/schema*.sql,src/main/java/**/repository/**/*.java"
+alwaysApply: false
+---
+
+# MySQL 規則
+
+- 本專案後端使用 **MySQL** 作為關聯式資料庫。
+- **Schema / 遷移**：SQL 腳本放在專案內約定目錄（如 `data/`），變更時一併更新對應的 schema 或遷移檔。
+- **JPA 實體**：欄位命名與資料表/欄位一致，必要時用 `@Table`、`@Column` 對應。
+- **查詢**：優先使用 Spring Data JPA 方法與 `@Query`，複雜查詢注意 N+1 與索引使用。
+- **連線與設定**：資料源、連線池、Dialect 等透過 `application.yml` 設定，勿寫死在程式碼。
