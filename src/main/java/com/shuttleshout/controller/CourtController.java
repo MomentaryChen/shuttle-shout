@@ -5,14 +5,12 @@ import java.util.List;
 import javax.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.shuttleshout.common.model.po.Court;
@@ -30,13 +28,27 @@ import lombok.extern.slf4j.Slf4j;
  * @author ShuttleShout Team
  */
 @RestController
-@RequestMapping("/api/courts")
+@RequestMapping("/courts")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "場地管理", description = "場地相關的API接口")
 public class CourtController {
 
     private final CourtService courtService;
+
+    @GetMapping
+    @Operation(summary = "獲取所有場地", description = "返回系統中所有場地列表")
+    public ResponseEntity<List<Court>> getAllCourts() {
+        List<Court> courts = courtService.getAllCourts();
+        return ResponseEntity.ok(courts);
+    }
+
+    @GetMapping("/active")
+    @Operation(summary = "獲取所有活躍場地", description = "返回所有已啟用的場地")
+    public ResponseEntity<List<Court>> getActiveCourts() {
+        List<Court> courts = courtService.getActiveCourts();
+        return ResponseEntity.ok(courts);
+    }
 
     @GetMapping("/team/{teamId}")
     @Operation(summary = "根據團隊ID獲取場地列表", description = "獲取指定團隊的所有場地")
@@ -72,6 +84,26 @@ public class CourtController {
         log.info("獲取場地詳情, ID: {}", id);
         Court court = courtService.getCourtById(id);
         return ResponseEntity.ok(court);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "更新場地", description = "更新指定場地資訊（僅更新傳入的非空欄位）")
+    public ResponseEntity<Court> updateCourt(
+            @Parameter(description = "場地ID") @PathVariable Long id,
+            @RequestBody Court court) {
+        log.info("更新場地, ID: {}", id);
+        Court existing = courtService.getCourtById(id);
+        if (court.getName() != null) {
+            existing.setName(court.getName());
+        }
+        if (court.getIsActive() != null) {
+            existing.setIsActive(court.getIsActive());
+        }
+        if (court.getTeamId() != null) {
+            existing.setTeamId(court.getTeamId());
+        }
+        Court updated = courtService.updateCourt(existing);
+        return ResponseEntity.ok(updated);
     }
 
     @GetMapping("/{courtId}/players")

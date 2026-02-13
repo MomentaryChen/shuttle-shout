@@ -12,6 +12,16 @@ import com.shuttleshout.common.model.po.Court;
 public interface CourtService {
 
     /**
+     * 獲取所有場地
+     */
+    List<Court> getAllCourts();
+
+    /**
+     * 獲取所有活躍場地
+     */
+    List<Court> getActiveCourts();
+
+    /**
      * 根據團隊ID獲取所有場地
      * 
      * @param teamId 團隊ID

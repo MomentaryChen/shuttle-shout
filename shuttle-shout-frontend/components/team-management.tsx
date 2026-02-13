@@ -156,10 +156,13 @@ export function TeamManagement() {
     })
   }, [teams, searchQuery, searchField])
 
-  // 计算简单统计数据（基于过滤后的结果）
+  // 計算簡單統計數據（總人數以不重複帳號/人為準，同一人跨多隊只計一次）
   const stats = useMemo(() => {
     const activeTeams = filteredTeams.filter(t => t.isActive !== false).length
-    const totalPlayers = filteredTeams.reduce((sum, t) => sum + (t.currentPlayerCount || 0), 0)
+    const allPlayerIds = filteredTeams.flatMap(t => t.playerIds ?? [])
+    const totalPlayers = allPlayerIds.length > 0
+      ? new Set(allPlayerIds).size
+      : filteredTeams.reduce((sum, t) => sum + (t.currentPlayerCount || 0), 0)
     const totalCourts = filteredTeams.reduce((sum, t) => sum + (t.currentCourtCount || 0), 0)
 
     return {

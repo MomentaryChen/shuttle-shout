@@ -37,6 +37,19 @@ public class CourtServiceImpl extends ServiceImpl<CourtRepository, Court> implem
     private final TeamRepository teamRepository;
 
     @Override
+    public List<Court> getAllCourts() {
+        return getMapper().selectAll();
+    }
+
+    @Override
+    public List<Court> getActiveCourts() {
+        QueryWrapper queryWrapper = QueryWrapper.create()
+                .where(COURT.IS_ACTIVE.eq(true))
+                .orderBy(COURT.TEAM_ID.asc(), COURT.ID.asc());
+        return getMapper().selectListByQuery(queryWrapper);
+    }
+
+    @Override
     public List<Court> getCourtsByTeamId(Long teamId) {
         QueryWrapper queryWrapper = QueryWrapper.create()
                 .where(COURT.TEAM_ID.eq(teamId))

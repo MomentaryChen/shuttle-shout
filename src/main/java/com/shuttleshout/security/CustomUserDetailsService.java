@@ -38,12 +38,14 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     public UserDetails loadUserById(String userId) throws UsernameNotFoundException {
         UserPO user;
-        
-        // 判断是用户ID还是用户名（JWT token中存储的是用户ID）
         try {
-            user = userRepository.selectOneById(userId);
+            Long id = Long.parseLong(userId);
+            // 必須載入 roles 關聯，否則 @PreAuthorize("hasRole('SYSTEM_ADMIN')") 等無法正確授權
+            user = userRepository.selectOneWithRelationsById(id);
+            if (user == null) {
+                user = userRepository.selectOneById(id);
+            }
         } catch (NumberFormatException e) {
-            // 如果不是数字，则按用户名查询
             QueryWrapper queryWrapper = QueryWrapper.create()
                     .where(UserPOTableDef.USER_PO.ID.eq(userId));
             user = userRepository.selectOneByQuery(queryWrapper);

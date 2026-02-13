@@ -36,7 +36,13 @@ import com.shuttleshout.service.ResourcePageService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * 頁面資源服務實現類
+ * 頁面資源服務實現類。
+ * <p>
+ * 管理員短路邏輯：具 {@code SYSTEM_ADMIN} 角色的使用者視為可存取「所有已啟用」的資源頁面。
+ * 在 {@link #getResourcePagesByUserId(Long)} 與 {@link #hasPermission(Long, String, String)} 中，
+ * 若偵測到使用者為管理員，則不查詢 role_resource_pages，直接回傳全部已啟用頁面或權限通過，
+ * 以符合「管理員可瀏覽所有頁面、無需逐頁授權」之需求。
+ * </p>
  *
  * @author ShuttleShout Team
  */
@@ -102,14 +108,20 @@ public class ResourcePageServiceImpl extends ServiceImpl<ResourcePageRepository,
     }
 
     /**
-     * 根據用戶ID獲取該用戶可訪問的所有頁面資源
+     * 根據用戶ID獲取該用戶可訪問的所有頁面資源。
+     * <p>若使用者為管理員（具 SYSTEM_ADMIN 角色），則短路回傳所有已啟用頁面，不依 role_resource_pages 過濾。</p>
      */
     @Override
     public List<ResourcePageDTO> getResourcePagesByUserId(Long userId) {
-        // 獲取用戶的所有角色（包含關聯的roles數據）
+        // 獲取用戶的所有角色（包含關聯的 roles 資料）
         UserPO user = userRepository.selectOneWithRelationsById(userId);
         if (user == null || CollectionUtils.isEmpty(user.getRoles())) {
             return new ArrayList<>();
+        }
+
+        // 管理員短路：具 SYSTEM_ADMIN 則回傳所有已啟用的頁面資源，不查 role_resource_pages
+        if (isAdminUser(user)) {
+            return getAllActiveResourcePages();
         }
 
         // 獲取所有角色ID
@@ -281,14 +293,20 @@ public class ResourcePageServiceImpl extends ServiceImpl<ResourcePageRepository,
     }
 
     /**
-     * 檢查用戶是否有權限訪問指定頁面
+     * 檢查用戶是否有權限訪問指定頁面。
+     * <p>若使用者為管理員（具 SYSTEM_ADMIN 角色），則短路回傳 true，不查 role_resource_pages。</p>
      */
     @Override
     public boolean hasPermission(Long userId, String resourcePageCode, String permission) {
-        // 獲取用戶的所有角色
-        UserPO user = userRepository.selectOneById(userId);
+        // 獲取用戶的所有角色（包含關聯的 roles 資料）
+        UserPO user = userRepository.selectOneWithRelationsById(userId);
         if (user == null || user.getRoles() == null) {
             return false;
+        }
+
+        // 管理員短路：具 SYSTEM_ADMIN 則對任意頁面與權限一律回傳 true
+        if (isAdminUser(user)) {
+            return true;
         }
 
         // 獲取所有角色ID
@@ -324,6 +342,34 @@ public class ResourcePageServiceImpl extends ServiceImpl<ResourcePageRepository,
                     return false;
             }
         });
+    }
+
+    /**
+     * 檢查使用者是否為管理員（具 SYSTEM_ADMIN 角色）
+     * 
+     * @param user 使用者實體
+     * @return 若使用者任一角色的 code 為 "SYSTEM_ADMIN" 則回傳 true，否則回傳 false
+     */
+    private boolean isAdminUser(UserPO user) {
+        if (user == null || CollectionUtils.isEmpty(user.getRoles())) {
+            return false;
+        }
+        return user.getRoles().stream()
+                .anyMatch(role -> "SYSTEM_ADMIN".equals(role.getCode()));
+    }
+
+    /**
+     * 獲取所有已啟用的頁面資源
+     * 
+     * @return 所有 is_active = true 的資源頁面列表
+     */
+    private List<ResourcePageDTO> getAllActiveResourcePages() {
+        QueryWrapper queryWrapper = QueryWrapper.create()
+                .where(RESOURCE_PAGE_PO.IS_ACTIVE.eq(true));
+        List<ResourcePagePO> resourcePages = getMapper().selectListByQuery(queryWrapper);
+        return resourcePages.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
     /**
