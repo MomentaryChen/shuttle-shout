@@ -548,21 +548,24 @@ export function UserTeamOverview() {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-2">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => router.push(`/team-calling?teamId=${team.id}`)}
-                                  className="h-8 w-8 rounded-full hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
-                                >
-                                  <PlayCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent side="top">
-                                <p className="text-xs">進入叫號系統</p>
-                              </TooltipContent>
-                            </Tooltip>
+                            {/* 叫號系統按鈕 - 僅在已登錄且為團隊所有者時顯示 */}
+                            {isAuthenticated && user?.id && team.userId === user.id && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() => router.push(`/team-calling?teamId=${team.id}`)}
+                                    className="h-8 w-8 rounded-full hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200"
+                                  >
+                                    <PlayCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <p className="text-xs">進入叫號系統</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button

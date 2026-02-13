@@ -1,0 +1,12 @@
+---
+description: 本專案使用 PowerShell (pwsh) 執行終端指令
+globs: "**/*.ps1"
+alwaysApply: true
+---
+
+# PowerShell (pwsh) 規則
+
+- **預設 Shell**：在本專案中執行終端指令時，使用 **PowerShell**（pwsh），不要使用 bash/cmd。
+- **路徑**：Windows 路徑可含空格時請用雙引號，例如：`cd "D:\path with spaces"`。
+- **指令撰寫**：多個指令用 `;` 或 `&&` 分隔，避免在字串外使用換行。
+- **執行腳本**：執行 `.ps1` 時使用 `pwsh -File script.ps1` 或 `./script.ps1`（需適當執行政策）。

@@ -1,0 +1,30 @@
+# shuttle-shout Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2026-02-13
+
+## Active Technologies
+
+- Java 8 (backend), TypeScript / Node (frontend Next.js) + Spring Boot 2.7.18, Spring WebSocket, MyBatis-Flex, MySQL; Next.js, React (001-redesign-calling-system)
+
+## Project Structure
+
+```text
+backend/
+frontend/
+tests/
+```
+
+## Commands
+
+npm test; npm run lint
+
+## Code Style
+
+Java 8 (backend), TypeScript / Node (frontend Next.js): Follow standard conventions
+
+## Recent Changes
+
+- 001-redesign-calling-system: Added Java 8 (backend), TypeScript / Node (frontend Next.js) + Spring Boot 2.7.18, Spring WebSocket, MyBatis-Flex, MySQL; Next.js, React
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

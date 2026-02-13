@@ -1,0 +1,15 @@
+---
+description: Spring Boot 後端開發規範
+globs: "src/main/java/**/*.java"
+alwaysApply: false
+---
+
+# Spring Boot 規則
+
+- 使用 **Spring Boot 3.x** 與 **Java 17+**，遵循既有專案分層：controller、service、repository、model。
+- **依賴注入**：優先使用建構子注入，避免欄位注入。
+- **REST**：遵循 RESTful 設計，正確使用 HTTP 方法與狀態碼。
+- **例外**：使用 `@ControllerAdvice` + `@ExceptionHandler` 統一處理，並善用專案內 `ErrorCode`。
+- **資料存取**：使用 Spring Data JPA，必要時搭配 `@Transactional`。
+- **設定**：使用 `application.yml` 或 `application.properties`，環境差異用 Profile。
+- **命名**：類名 PascalCase，方法與變數 camelCase，常數 ALL_CAPS。
