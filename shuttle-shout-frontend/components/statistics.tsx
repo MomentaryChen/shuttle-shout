@@ -4,7 +4,8 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { authApi } from "@/lib/api"
+import { useAuth } from "@/contexts/AuthContext"
+import { adminApi } from "@/lib/api"
 import { UserDto } from "@/types/api"
 import { Spinner } from "@/components/ui/spinner"
 import { toast } from "sonner"
@@ -24,13 +25,16 @@ import {
   RefreshCw
 } from "lucide-react"
 
+const PAGE_CODE_STATISTICS_REPORT = "STATISTICS_REPORT"
+
 export function Statistics() {
+  const { user: currentUser, isLoading: authLoading, hasPageAccess } = useAuth()
+  const hasPermission = hasPageAccess(PAGE_CODE_STATISTICS_REPORT)
   const [loading, setLoading] = useState(true)
-  const [currentUser, setCurrentUser] = useState<UserDto | null>(null)
-  const [hasPermission, setHasPermission] = useState(false)
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeUsers: 0,
+    adminUsers: 0,
     totalTeams: 0,
     activeTeams: 0,
     totalCourts: 0,
@@ -42,55 +46,38 @@ export function Statistics() {
   })
 
   useEffect(() => {
-    checkPermissionAndLoadStats()
-  }, [])
-
-  const checkPermissionAndLoadStats = async () => {
-    try {
-      setLoading(true)
-
-      // 获取当前用户信息
-      const userInfo = await authApi.getCurrentUser()
-      setCurrentUser(userInfo)
-
-      // 检查是否具有管理員角色
-      const isAdmin = userInfo.roleNames?.includes("管理員") || false
-      setHasPermission(isAdmin)
-
-      if (isAdmin) {
-        // 模拟加载统计数据
-        await loadStatistics()
-      } else {
-        toast.error("您沒有權限訪問此頁面")
-      }
-    } catch (error) {
-      console.error("加載統計數據失敗:", error)
-      toast.error("加載統計數據失敗，請稍後重試")
-      setHasPermission(false)
-    } finally {
+    if (hasPermission && !authLoading) {
+      loadStatistics().finally(() => setLoading(false))
+    } else if (!authLoading) {
       setLoading(false)
     }
-  }
+  }, [hasPermission, authLoading])
 
   const loadStatistics = async () => {
-    // 模拟API调用 - 这里应该调用实际的统计API
     try {
-      // 模拟延迟
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // 與人員配置管理一致：從後端取得使用者列表並計算用戶／管理員統計（管理員含 SYSTEM_ADMIN、Admin）
+      const users = await adminApi.getAllUsers()
+      const totalUsers = users.length
+      const activeUsers = users.filter(u => u.isActive !== false).length
+      const isAdmin = (u: UserDto) =>
+        (u.roleCodes?.length
+          ? u.roleCodes.some(c => c === "SYSTEM_ADMIN" || c === "Admin" || c?.toUpperCase() === "ADMIN")
+          : u.roleNames?.some(name => name === "系統管理員" || name === "管理員" || name === "Admin" || name?.toUpperCase() === "ADMIN"))
+      const adminUsers = users.filter(isAdmin).length
 
-      // 这里应该从API获取真实数据
-      setStats({
-        totalUsers: 156,
-        activeUsers: 142,
-        totalTeams: 23,
-        activeTeams: 19,
-        totalCourts: 8,
-        availableCourts: 6,
-        totalMatches: 89,
-        todayMatches: 5,
-        systemUptime: "99.8%",
+      setStats(prev => ({
+        ...prev,
+        totalUsers,
+        activeUsers,
+        adminUsers,
+        totalTeams: prev.totalTeams || 0,
+        activeTeams: prev.activeTeams || 0,
+        totalCourts: prev.totalCourts || 0,
+        availableCourts: prev.availableCourts || 0,
+        totalMatches: prev.totalMatches || 0,
+        todayMatches: prev.todayMatches || 0,
         lastUpdated: new Date()
-      })
+      }))
     } catch (error) {
       console.error("獲取統計數據失敗:", error)
       toast.error("獲取統計數據失敗")
@@ -102,8 +89,18 @@ export function Statistics() {
     toast.success("統計數據已更新")
   }
 
-  // 如果没有权限，显示错误信息
-  if (!loading && !hasPermission) {
+  // 權限與載入：依後端可存取頁面判斷（管理員已含全部頁面）
+  if (authLoading || (loading && hasPermission)) {
+    return (
+      <div className="w-full min-h-[400px] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Spinner className="w-8 h-8 text-blue-600 dark:text-primary" />
+          <p className="text-muted-foreground font-medium">正在載入...</p>
+        </div>
+      </div>
+    )
+  }
+  if (!hasPermission) {
     return (
       <div className="w-full min-h-[400px] flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -123,17 +120,6 @@ export function Statistics() {
             </div>
           </CardContent>
         </Card>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="w-full min-h-[400px] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Spinner className="w-8 h-8 text-blue-600 dark:text-primary" />
-          <p className="text-muted-foreground font-medium">正在載入統計數據...</p>
-        </div>
       </div>
     )
   }
@@ -204,7 +190,7 @@ export function Statistics() {
                 <Shield className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">12</p>
+                <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.adminUsers}</p>
                 <p className="text-sm text-purple-700 dark:text-purple-300">管理員</p>
               </div>
             </div>

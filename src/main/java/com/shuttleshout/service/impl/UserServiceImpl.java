@@ -48,13 +48,16 @@ public class UserServiceImpl extends ServiceImpl<UserRepository, UserPO> impleme
     private final PasswordUtil passwordUtil;
 
     /**
-     * 获取所有用户
+     * 獲取所有用戶（含角色關聯，以便 DTO 回傳 roleNames / roleCodes 給前端）
      */
     @Override
     public List<UserDTO> getAllUsers() {
         List<UserPO> users = getMapper().selectAll();
         return users.stream()
-                .map(this::convertToDto)
+                .map(user -> {
+                    UserPO withRelations = getMapper().selectOneWithRelationsById(user.getId());
+                    return convertToDto(withRelations != null ? withRelations : user);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -246,12 +249,17 @@ public class UserServiceImpl extends ServiceImpl<UserRepository, UserPO> impleme
         dto.setCreatedAt(user.getCreatedAt());
         dto.setUpdatedAt(user.getUpdatedAt());
 
-        // 获取用户角色名称列表
+        // 取得使用者角色名稱與代碼列表（代碼供前端辨識 SYSTEM_ADMIN 等，統計一致）
         if (user.getRoles() != null && !user.getRoles().isEmpty()) {
             List<String> roleNames = user.getRoles().stream()
                     .map(RolePO::getName)
                     .collect(Collectors.toList());
             dto.setRoleNames(roleNames);
+            List<String> roleCodes = user.getRoles().stream()
+                    .map(RolePO::getCode)
+                    .filter(code -> code != null && !code.isEmpty())
+                    .collect(Collectors.toList());
+            dto.setRoleCodes(roleCodes);
         }
 
         return dto;

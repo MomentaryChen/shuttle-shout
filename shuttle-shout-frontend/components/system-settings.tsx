@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { authApi } from "@/lib/api"
+import { useAuth } from "@/contexts/AuthContext"
 import { UserDto } from "@/types/api"
 import { Spinner } from "@/components/ui/spinner"
 import { toast } from "sonner"
@@ -35,11 +36,13 @@ import {
   Lock
 } from "lucide-react"
 
+const PAGE_CODE_SYSTEM_SETTINGS = "SYSTEM_SETTINGS"
+
 export function SystemSettings() {
+  const { user: currentUser, isLoading: authLoading, hasPageAccess } = useAuth()
+  const hasPermission = hasPageAccess(PAGE_CODE_SYSTEM_SETTINGS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [currentUser, setCurrentUser] = useState<UserDto | null>(null)
-  const [hasPermission, setHasPermission] = useState(false)
   const [activeTab, setActiveTab] = useState("general")
 
   // 系统设置状态
@@ -82,35 +85,12 @@ export function SystemSettings() {
   })
 
   useEffect(() => {
-    checkPermissionAndLoadSettings()
-  }, [])
-
-  const checkPermissionAndLoadSettings = async () => {
-    try {
-      setLoading(true)
-
-      // 获取当前用户信息
-      const userInfo = await authApi.getCurrentUser()
-      setCurrentUser(userInfo)
-
-      // 检查是否具有管理員角色
-      const isAdmin = userInfo.roleNames?.includes("管理員") || false
-      setHasPermission(isAdmin)
-
-      if (isAdmin) {
-        // 加载系统设置
-        await loadSettings()
-      } else {
-        toast.error("您沒有權限訪問此頁面")
-      }
-    } catch (error) {
-      console.error("加載系統設置失敗:", error)
-      toast.error("加載系統設置失敗，請稍後重試")
-      setHasPermission(false)
-    } finally {
+    if (hasPermission && !authLoading) {
+      loadSettings().finally(() => setLoading(false))
+    } else if (!authLoading) {
       setLoading(false)
     }
-  }
+  }, [hasPermission, authLoading])
 
   const loadSettings = async () => {
     // 模拟API调用加载设置
@@ -146,8 +126,18 @@ export function SystemSettings() {
     }))
   }
 
-  // 如果没有权限，显示错误信息
-  if (!loading && !hasPermission) {
+  // 權限與載入：依後端可存取頁面判斷（管理員已含全部頁面）
+  if (authLoading || (loading && hasPermission)) {
+    return (
+      <div className="w-full min-h-[400px] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Spinner className="w-8 h-8 text-blue-600 dark:text-primary" />
+          <p className="text-muted-foreground font-medium">正在載入...</p>
+        </div>
+      </div>
+    )
+  }
+  if (!hasPermission) {
     return (
       <div className="w-full min-h-[400px] flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -167,17 +157,6 @@ export function SystemSettings() {
             </div>
           </CardContent>
         </Card>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="w-full min-h-[400px] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Spinner className="w-8 h-8 text-blue-600 dark:text-primary" />
-          <p className="text-muted-foreground font-medium">正在載入系統設置...</p>
-        </div>
       </div>
     )
   }

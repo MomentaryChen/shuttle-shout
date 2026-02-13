@@ -8,6 +8,8 @@
 ## [未發布] - 2025-12-12
 
 ### 新增
+- **文檔**
+  - 新增 `doc/人員權限說明.md`，說明目前人員（用戶）與權限設計：角色、頁面資源、權限類型、後端判斷方式與相關檔案索引。
 - **WebSocket 團隊叫號系統**
   - 新增 `TeamCallingWebSocketHandler` 處理實時 WebSocket 連接
   - 實現策略模式 (`MessageStrategyFactory`) 處理不同類型的 WebSocket 消息
@@ -80,6 +82,12 @@
   - 優化 API 調用和類型定義
 
 ### 修改
+- **管理員完整頁面瀏覽權限**
+  - 具 `SYSTEM_ADMIN` 角色的使用者現可瀏覽系統內所有已啟用的資源頁面，無需逐頁授權
+  - 更新 `ResourcePageServiceImpl`：`getResourcePagesByUserId` 對管理員短路回傳所有已啟用頁面；`hasPermission` 對管理員一律回傳 true
+  - 新增輔助方法 `isAdminUser(UserPO)`、`getAllActiveResourcePages()`，並補充正體中文註解
+  - 非管理員之可存取頁面與權限檢查行為維持不變
+
 - **後端改進**
   - 更新 `AuthController` 支援註冊功能
   - 更新 `TeamController` 和相關服務支援團隊級別
@@ -98,7 +106,14 @@
   - 更新類型定義 (`types/api.ts`)
   - 改進 WebSocket 連接管理和錯誤處理
 
+### 修復
+- **球場管理**
+  - 後端：新增 `GET /courts`（全部球場）、`GET /courts/active`（活躍球場），供前端 `courtApi.getAll()`、`courtApi.getActive()` 使用；新增 `PUT /courts/{id}`，並改為僅更新請求體中傳入的欄位，避免部分更新時覆寫為 null
+  - 前端：新增球場管理頁面 (`app/court-management/page.tsx`) 與元件 `CourtManagement`，可檢視所有球場、所屬團隊、啟用狀態並切換啟用/停用
+  - 儀表板「球場管理」連結現可正常進入並顯示資料；叫號系統與人員配置載入球場資料不再 404
+
 ### 文檔
+- 新增 Cursor 規則 `changelog.mdc`：每次改動都需同步更新 CHANGELOG
 - 新增 `README_ZH.md` 中文版專案說明
 - 更新 `README.md` 專案文檔
 - 新增專案截圖展示

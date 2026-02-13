@@ -114,15 +114,18 @@ export function TeamList() {
     }
   }
 
-  // 計算統計數據
+  // 計算統計數據（總人數以不重複帳號/人為準，同一人跨多隊只計一次）
   const stats = useMemo(() => {
     const totalTeams = teams.length
     const activeTeams = teams.filter(t => t.isActive !== false).length
-    const totalPlayers = teams.reduce((sum, t) => sum + (t.currentPlayerCount || 0), 0)
+    const allPlayerIds = teams.flatMap(t => t.playerIds ?? [])
+    const totalPlayers = allPlayerIds.length > 0
+      ? new Set(allPlayerIds).size
+      : teams.reduce((sum, t) => sum + (t.currentPlayerCount || 0), 0)
     const totalCourts = teams.reduce((sum, t) => sum + (t.currentCourtCount || 0), 0)
     const maxPlayers = teams.reduce((sum, t) => sum + (t.maxPlayers || 0), 0)
     const maxCourts = teams.reduce((sum, t) => sum + (t.courtCount || 0), 0)
-    
+
     return {
       totalTeams,
       activeTeams,

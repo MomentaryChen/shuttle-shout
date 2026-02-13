@@ -40,6 +40,7 @@ public class UserDTO {
     private LocalDateTime lastLoginAt;
 
     private List<String> roleNames = new ArrayList<>(); // 用户拥有的角色名称列表
+    private List<String> roleCodes = new ArrayList<>(); // 用户拥有的角色代碼列表（如 SYSTEM_ADMIN），供前端權限與統計一致使用
 
     private LocalDateTime createdAt;
 

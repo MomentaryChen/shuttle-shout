@@ -111,6 +111,8 @@ export interface UserDto {
   isActive?: boolean
   lastLoginAt?: string
   roleNames?: string[]
+  /** 角色代碼（如 SYSTEM_ADMIN），與後端一致，供權限與管理員統計使用 */
+  roleCodes?: string[]
   createdAt?: string
   updatedAt?: string
 }

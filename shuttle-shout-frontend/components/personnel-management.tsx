@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { adminApi, authApi } from "@/lib/api"
+import { adminApi } from "@/lib/api"
+import { useAuth } from "@/contexts/AuthContext"
 import { UserDto } from "@/types/api"
 import { Spinner } from "@/components/ui/spinner"
 import { toast } from "sonner"
@@ -26,54 +27,42 @@ import {
   Phone
 } from "lucide-react"
 
+const PAGE_CODE_PERSONNEL_MANAGEMENT = "PERSONNEL_MANAGEMENT"
+
 export function PersonnelManagement() {
+  const { user: currentUser, isLoading: authLoading, hasPageAccess } = useAuth()
+  const hasPermission = hasPageAccess(PAGE_CODE_PERSONNEL_MANAGEMENT)
   const [users, setUsers] = useState<UserDto[]>([])
   const [loading, setLoading] = useState(true)
-  const [currentUser, setCurrentUser] = useState<UserDto | null>(null)
-  const [hasPermission, setHasPermission] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchField, setSearchField] = useState<"username" | "email" | "realName" | "all">("all")
 
   useEffect(() => {
-    checkPermissionAndLoadUsers()
-  }, [])
-
-  const checkPermissionAndLoadUsers = async () => {
-    try {
-      setLoading(true)
-
-      // 获取当前用户信息
-      const userInfo = await authApi.getCurrentUser()
-      setCurrentUser(userInfo)
-
-      // 检查是否具有SYSTEM_ADMIN角色
-      const isSystemAdmin = userInfo.roleNames?.includes("SYSTEM_ADMIN") || false
-      setHasPermission(isSystemAdmin)
-
-      if (isSystemAdmin) {
-        // 只有SYSTEM_ADMIN才能获取所有用户
-        const usersData = await adminApi.getAllUsers()
-
-        // 按创建时间排序，最新的在前
+    if (!hasPermission || authLoading) {
+      if (!authLoading) setLoading(false)
+      return
+    }
+    let cancelled = false
+    adminApi.getAllUsers()
+      .then((usersData) => {
+        if (cancelled) return
         const sortedUsers = [...usersData].sort((a, b) => {
           if (!a.createdAt && !b.createdAt) return 0
           if (!a.createdAt) return 1
           if (!b.createdAt) return -1
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         })
-
         setUsers(sortedUsers)
-      } else {
-        toast.error("您沒有權限訪問此頁面")
-      }
-    } catch (error) {
-      console.error("加載用戶數據失敗:", error)
-      toast.error("加載用戶數據失敗，請稍後重試")
-      setHasPermission(false)
-    } finally {
-      setLoading(false)
-    }
-  }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error("加載用戶數據失敗:", err)
+          toast.error("加載用戶數據失敗，請稍後重試")
+        }
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [hasPermission, authLoading])
 
   // 搜索和过滤逻辑
   const filteredUsers = useMemo(() => {
@@ -103,11 +92,15 @@ export function PersonnelManagement() {
     })
   }, [users, searchQuery, searchField])
 
-  // 计算简单统计数据（基于过滤后的结果）
+  // 計算簡單統計數據（管理員：roleCodes 含 SYSTEM_ADMIN 或 Admin，或 roleNames 含對應名稱）
+  const isAdminByRole = (u: UserDto) =>
+    (u.roleCodes?.length
+      ? u.roleCodes.some(c => c === "SYSTEM_ADMIN" || c === "Admin" || c?.toUpperCase() === "ADMIN")
+      : u.roleNames?.some(name => name === "系統管理員" || name === "管理員" || name === "Admin" || name?.toUpperCase() === "ADMIN"))
   const stats = useMemo(() => {
     const activeUsers = filteredUsers.filter(u => u.isActive !== false).length
     const inactiveUsers = filteredUsers.length - activeUsers
-    const adminUsers = filteredUsers.filter(u => u.roleNames?.includes("SYSTEM_ADMIN")).length
+    const adminUsers = filteredUsers.filter(isAdminByRole).length
 
     return {
       totalUsers: filteredUsers.length,
@@ -117,8 +110,18 @@ export function PersonnelManagement() {
     }
   }, [filteredUsers])
 
-  // 如果没有权限，显示错误信息
-  if (!loading && !hasPermission) {
+  // 權限與載入：依後端可存取頁面判斷（管理員已含全部頁面）
+  if (authLoading || (loading && hasPermission)) {
+    return (
+      <div className="w-full min-h-[400px] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Spinner className="w-8 h-8 text-blue-600 dark:text-primary" />
+          <p className="text-muted-foreground font-medium">正在載入...</p>
+        </div>
+      </div>
+    )
+  }
+  if (!hasPermission) {
     return (
       <div className="w-full min-h-[400px] flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -138,17 +141,6 @@ export function PersonnelManagement() {
             </div>
           </CardContent>
         </Card>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="w-full min-h-[400px] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Spinner className="w-8 h-8 text-blue-600 dark:text-primary" />
-          <p className="text-muted-foreground font-medium">正在載入用戶資訊...</p>
-        </div>
       </div>
     )
   }
@@ -407,21 +399,24 @@ export function PersonnelManagement() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {user.roleNames && user.roleNames.length > 0 ? (
-                            user.roleNames.map((roleName) => (
+                          {(user.roleNames?.length || user.roleCodes?.length) ? (
+                            (user.roleCodes?.length ? user.roleCodes : user.roleNames ?? []).map((roleKey) => {
+                              const isAdminRole = roleKey === "SYSTEM_ADMIN" || roleKey === "Admin" || roleKey?.toUpperCase() === "ADMIN" ||
+                                ["系統管理員", "管理員"].includes(roleKey)
+                              return (
                               <Badge
-                                key={roleName}
-                                variant={roleName === "SYSTEM_ADMIN" ? "default" : "secondary"}
+                                key={roleKey}
+                                variant={isAdminRole ? "default" : "secondary"}
                                 className={`text-xs ${
-                                  roleName === "SYSTEM_ADMIN"
+                                  isAdminRole
                                     ? "bg-red-100 text-red-700 border-red-200 dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/30"
                                     : ""
                                 }`}
                               >
-                                {roleName === "SYSTEM_ADMIN" && <Shield className="w-3 h-3 mr-1" />}
-                                {roleName}
+                                {isAdminRole && <Shield className="w-3 h-3 mr-1" />}
+                                {roleKey}
                               </Badge>
-                            ))
+                            )})
                           ) : (
                             <Badge variant="outline" className="text-xs">
                               普通用戶
