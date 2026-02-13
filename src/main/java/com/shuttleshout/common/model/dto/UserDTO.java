@@ -39,6 +39,9 @@ public class UserDTO {
 
     private LocalDateTime lastLoginAt;
 
+    /** 羽球等級級數（1–18），null 表示未設定 */
+    private Integer badmintonLevel;
+
     private List<String> roleNames = new ArrayList<>(); // 用户拥有的角色名称列表
     private List<String> roleCodes = new ArrayList<>(); // 用户拥有的角色代碼列表（如 SYSTEM_ADMIN），供前端權限與統計一致使用
 

@@ -31,6 +31,9 @@ public class UserUpdateDTO {
 
     private Boolean isActive;
 
+    /** 羽球等級級數（1–18），null 表示清空為未設定 */
+    private Integer badmintonLevel;
+
     @Size(min = 6, message = "密码长度不能少于6个字符")
     private String password; // 可选，如果提供则更新密码
 

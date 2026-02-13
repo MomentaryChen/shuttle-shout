@@ -8,6 +8,13 @@
 ## [未發布] - 2025-12-12
 
 ### 新增
+- **規格**
+  - 新增 `specs/003-personnel-badminton-level`：人員羽球等級制度（依羽球等級參考表為人員加入等級欄位，預設 null）。
+  - 完成 003 實作計畫：`plan.md`、`research.md`、`data-model.md`、`contracts/user-badminton-level-api.md`、`quickstart.md`。
+  - 完成 003 任務分解：`specs/003-personnel-badminton-level/tasks.md`（Phase 1–6，依 US1/US2/US3 分階段）。
+- **實作（003 人員羽球等級）**
+  - 後端：`users.badminton_level` 遷移腳本、`BadmintonLevel` 枚舉、UserPO/DTO/UserServiceImpl 等級欄位與 1–18 驗證。
+  - 前端：UserDto.badmintonLevel、等級常數與顯示 helper、人員管理列表等級欄與編輯等級對話框、userApi.update 支援 badmintonLevel。
 - **文檔**
   - 新增 `doc/人員權限說明.md`，說明目前人員（用戶）與權限設計：角色、頁面資源、權限類型、後端判斷方式與相關檔案索引。
 - **WebSocket 團隊叫號系統**

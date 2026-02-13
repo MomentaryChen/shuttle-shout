@@ -99,6 +99,26 @@ export interface Court {
 }
 
 /**
+ * 羽球等級對照（台灣羽球推廣協會）：級數 1–18 → 比賽階級
+ * 後端儲存級數，前端顯示比賽階級與級數
+ */
+export const BADMINTON_LEVELS: { level: number; tier: string }[] = [
+  ...Array.from({ length: 3 }, (_, i) => ({ level: i + 1, tier: "新手階" })),
+  ...Array.from({ length: 2 }, (_, i) => ({ level: i + 4, tier: "初階" })),
+  ...Array.from({ length: 2 }, (_, i) => ({ level: i + 6, tier: "初中階" })),
+  ...Array.from({ length: 2 }, (_, i) => ({ level: i + 8, tier: "中階" })),
+  ...Array.from({ length: 3 }, (_, i) => ({ level: i + 10, tier: "中進階" })),
+  ...Array.from({ length: 3 }, (_, i) => ({ level: i + 13, tier: "高階" })),
+  ...Array.from({ length: 3 }, (_, i) => ({ level: i + 16, tier: "職業級" })),
+]
+
+export function getBadmintonLevelLabel(level: number | null | undefined): string {
+  if (level == null) return "未設定"
+  const item = BADMINTON_LEVELS.find((x) => x.level === level)
+  return item ? `${item.tier}（${level}）` : `級數 ${level}`
+}
+
+/**
  * 用户相关类型
  */
 export interface UserDto {
@@ -110,6 +130,8 @@ export interface UserDto {
   avatar?: string
   isActive?: boolean
   lastLoginAt?: string
+  /** 羽球等級級數（1–18），null 表示未設定 */
+  badmintonLevel?: number | null
   roleNames?: string[]
   /** 角色代碼（如 SYSTEM_ADMIN），與後端一致，供權限與管理員統計使用 */
   roleCodes?: string[]
