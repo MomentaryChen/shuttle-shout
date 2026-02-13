@@ -5,6 +5,8 @@ Auto-generated from all feature plans. Last updated: 2026-02-13
 ## Active Technologies
 - Java 8 (backend), TypeScript (frontend) + Spring Boot 2.7.18, Spring Security, MyBatis-Flex, MySQL；前端 Vite / React、pnpm (002-admin-full-page-access)
 - MySQL（users, roles, resource_pages, role_resource_pages 等既有表） (002-admin-full-page-access)
+- Java 8 (backend), TypeScript / Node (frontend Next.js) + Spring Boot 2.7.x, MyBatis-Flex, MySQL; Next.js, React (003-personnel-badminton-level)
+- MySQL (`users` 表新增 `badminton_level` 欄位，TINYINT NULL，1–18) (003-personnel-badminton-level)
 
 - Java 8 (backend), TypeScript / Node (frontend Next.js) + Spring Boot 2.7.18, Spring WebSocket, MyBatis-Flex, MySQL; Next.js, React (001-redesign-calling-system)
 
@@ -25,6 +27,7 @@ npm test; npm run lint
 Java 8 (backend), TypeScript / Node (frontend Next.js): Follow standard conventions
 
 ## Recent Changes
+- 003-personnel-badminton-level: Added Java 8 (backend), TypeScript / Node (frontend Next.js) + Spring Boot 2.7.x, MyBatis-Flex, MySQL; Next.js, React
 - 002-admin-full-page-access: Added Java 8 (backend), TypeScript (frontend) + Spring Boot 2.7.18, Spring Security, MyBatis-Flex, MySQL；前端 Vite / React、pnpm
 
 - 001-redesign-calling-system: Added Java 8 (backend), TypeScript / Node (frontend Next.js) + Spring Boot 2.7.18, Spring WebSocket, MyBatis-Flex, MySQL; Next.js, React

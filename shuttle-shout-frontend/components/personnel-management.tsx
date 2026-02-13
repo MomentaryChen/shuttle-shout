@@ -6,9 +6,9 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { adminApi } from "@/lib/api"
+import { adminApi, userApi } from "@/lib/api"
 import { useAuth } from "@/contexts/AuthContext"
-import { UserDto } from "@/types/api"
+import { UserDto, getBadmintonLevelLabel, BADMINTON_LEVELS } from "@/types/api"
 import { Spinner } from "@/components/ui/spinner"
 import { toast } from "sonner"
 import { format, formatDistanceToNow } from "date-fns"
@@ -24,8 +24,24 @@ import {
   UserCheck,
   UserX,
   Mail,
-  Phone
+  Phone,
+  Pencil
 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const PAGE_CODE_PERSONNEL_MANAGEMENT = "PERSONNEL_MANAGEMENT"
 
@@ -36,6 +52,10 @@ export function PersonnelManagement() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchField, setSearchField] = useState<"username" | "email" | "realName" | "all">("all")
+  const [editLevelDialogOpen, setEditLevelDialogOpen] = useState(false)
+  const [editingUser, setEditingUser] = useState<UserDto | null>(null)
+  const [editLevel, setEditLevel] = useState<string>("")
+  const [savingLevel, setSavingLevel] = useState(false)
 
   useEffect(() => {
     if (!hasPermission || authLoading) {
@@ -109,6 +129,36 @@ export function PersonnelManagement() {
       adminUsers,
     }
   }, [filteredUsers])
+
+  const EDIT_LEVEL_NONE = "__none__" // Radix Select 不允許 value=""
+
+  const openEditLevel = (user: UserDto) => {
+    setEditingUser(user)
+    setEditLevel(user.badmintonLevel != null ? String(user.badmintonLevel) : EDIT_LEVEL_NONE)
+    setEditLevelDialogOpen(true)
+  }
+
+  const saveEditLevel = async () => {
+    if (!editingUser) return
+    setSavingLevel(true)
+    try {
+      const levelValue = editLevel === EDIT_LEVEL_NONE ? null : Number(editLevel)
+      await userApi.update(editingUser.id, { badmintonLevel: levelValue })
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === editingUser.id ? { ...u, badmintonLevel: levelValue ?? undefined } : u
+        )
+      )
+      setEditLevelDialogOpen(false)
+      setEditingUser(null)
+      toast.success("羽球等級已更新")
+    } catch (err) {
+      console.error("更新等級失敗:", err)
+      toast.error("更新等級失敗，請稍後重試")
+    } finally {
+      setSavingLevel(false)
+    }
+  }
 
   // 權限與載入：依後端可存取頁面判斷（管理員已含全部頁面）
   if (authLoading || (loading && hasPermission)) {
@@ -344,6 +394,7 @@ export function PersonnelManagement() {
                     <TableHead className="font-semibold text-blue-900 dark:text-blue-100">真實姓名</TableHead>
                     <TableHead className="font-semibold text-blue-900 dark:text-blue-100">郵箱</TableHead>
                     <TableHead className="font-semibold text-blue-900 dark:text-blue-100">手機號碼</TableHead>
+                    <TableHead className="font-semibold text-blue-900 dark:text-blue-100 text-center">羽球等級</TableHead>
                     <TableHead className="font-semibold text-blue-900 dark:text-blue-100 text-center">狀態</TableHead>
                     <TableHead className="font-semibold text-blue-900 dark:text-blue-100">角色</TableHead>
                     <TableHead className="font-semibold text-blue-900 dark:text-blue-100 text-center">最後登錄</TableHead>
@@ -383,6 +434,20 @@ export function PersonnelManagement() {
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}
+                      </TableCell>
+                      <TableCell className="text-center text-sm">
+                        <div className="flex items-center justify-center gap-1">
+                          <span>{getBadmintonLevelLabel(user.badmintonLevel)}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                            onClick={() => openEditLevel(user)}
+                            title="編輯羽球等級"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </TableCell>
                       <TableCell className="text-center">
                         {user.isActive !== false ? (
@@ -462,6 +527,46 @@ export function PersonnelManagement() {
           </CardContent>
         </Card>
       )}
+
+      {/* 編輯羽球等級對話框 */}
+      <Dialog open={editLevelDialogOpen} onOpenChange={setEditLevelDialogOpen}>
+        <DialogContent className="sm:max-w-md" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>編輯羽球等級</DialogTitle>
+          </DialogHeader>
+          {editingUser && (
+            <div className="space-y-4 py-2">
+              <p className="text-sm text-muted-foreground">
+                用戶：{editingUser.realName || editingUser.username}
+              </p>
+              <div className="space-y-2">
+                <Label>羽球等級</Label>
+                <Select value={editLevel} onValueChange={setEditLevel}>
+                  <SelectTrigger className="w-full bg-input text-foreground border-border">
+                    <SelectValue placeholder="選擇等級" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={EDIT_LEVEL_NONE}>未設定</SelectItem>
+                    {BADMINTON_LEVELS.map(({ level, tier }) => (
+                      <SelectItem key={level} value={String(level)}>
+                        {tier}（{level}）
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditLevelDialogOpen(false)}>
+              取消
+            </Button>
+            <Button onClick={saveEditLevel} disabled={savingLevel}>
+              {savingLevel ? "儲存中..." : "儲存"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

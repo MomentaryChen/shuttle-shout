@@ -472,6 +472,8 @@ export const userApi = {
     avatar?: string
     password?: string
     isActive?: boolean
+    /** 羽球等級級數（1–18），null 表示未設定 */
+    badmintonLevel?: number | null
   }): Promise<UserDto> => {
     return apiRequest<UserDto>(`/users/${id}`, {
       method: "PUT",

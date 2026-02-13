@@ -36,6 +36,9 @@ public class UserCreateDTO {
 
     private String realName;
 
+    /** 羽球等級級數（1–18），不傳或 null 則未設定 */
+    private Integer badmintonLevel;
+
     private List<Long> roleIds = new ArrayList<>(); // 角色ID列表
 }
 

@@ -20,6 +20,7 @@ import com.shuttleshout.common.exception.ErrorCode;
 import com.shuttleshout.common.model.dto.UserCreateDTO;
 import com.shuttleshout.common.model.dto.UserDTO;
 import com.shuttleshout.common.model.dto.UserUpdateDTO;
+import com.shuttleshout.common.model.enums.BadmintonLevel;
 import com.shuttleshout.common.model.po.RolePO;
 import com.shuttleshout.common.model.po.UserPO;
 import com.shuttleshout.common.model.po.UserRolePO;
@@ -118,6 +119,10 @@ public class UserServiceImpl extends ServiceImpl<UserRepository, UserPO> impleme
         user.setPhoneNumber(userCreateDto.getPhoneNumber());
         user.setRealName(userCreateDto.getRealName());
         user.setIsActive(true);
+        if (userCreateDto.getBadmintonLevel() != null && !BadmintonLevel.isValid(userCreateDto.getBadmintonLevel())) {
+            throw new ApiException(ErrorCode.VALIDATION_ERROR, "羽球等級須為 1 至 18 或未設定");
+        }
+        user.setBadmintonLevel(userCreateDto.getBadmintonLevel());
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
 
@@ -167,6 +172,10 @@ public class UserServiceImpl extends ServiceImpl<UserRepository, UserPO> impleme
         if (userUpdateDto.getIsActive() != null) {
             user.setIsActive(userUpdateDto.getIsActive());
         }
+        if (userUpdateDto.getBadmintonLevel() != null && !BadmintonLevel.isValid(userUpdateDto.getBadmintonLevel())) {
+            throw new ApiException(ErrorCode.VALIDATION_ERROR, "羽球等級須為 1 至 18 或未設定");
+        }
+        user.setBadmintonLevel(userUpdateDto.getBadmintonLevel());
         if (userUpdateDto.getPassword() != null && !userUpdateDto.getPassword().isEmpty()) {
             // 加密密码
             user.setPassword(passwordUtil.encode(userUpdateDto.getPassword()));
@@ -246,6 +255,7 @@ public class UserServiceImpl extends ServiceImpl<UserRepository, UserPO> impleme
         dto.setAvatar(user.getAvatar());
         dto.setIsActive(user.getIsActive());
         dto.setLastLoginAt(user.getLastLoginAt());
+        dto.setBadmintonLevel(user.getBadmintonLevel());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setUpdatedAt(user.getUpdatedAt());
 

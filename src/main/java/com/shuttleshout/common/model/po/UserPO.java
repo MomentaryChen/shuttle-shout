@@ -73,6 +73,10 @@ public class UserPO implements Serializable {
     )
     private List<TeamPO> teams = new ArrayList<>(); // 用戶所屬的所有球隊
 
+    /** 羽球等級級數（1–18），null 表示未設定 */
+    @Column(value = "badminton_level")
+    private Integer badmintonLevel;
+
     @Column(value = "created_at")
     private LocalDateTime createdAt;
 
